@@ -1,0 +1,6 @@
+{
+  "name": "The CodeXR Challenge",
+  "description": "A polished TV UI experience for streaming and media management.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": []
+}
