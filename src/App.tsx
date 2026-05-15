@@ -19,7 +19,7 @@ import { FourSquarePage } from './components/FourSquarePage';
 import { NihilistPage } from './components/NihilistPage';
 import { BifidPage } from './components/BifidPage';
 
-type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'RAIL_FENCE' | 'VIGENERE' | 'BEAUFORT' | 'AUTOKEY' | 'TRANSPOSITION' | 'PLAYFAIR' | 'FOUR_SQUARE' | 'NIHILIST' | 'BIFID' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'LEGAL' | 'EPISODE_SETTINGS';
+type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'RAIL_FENCE' | 'VIGENERE' | 'BEAUFORT' | 'AUTOKEY' | 'TRANSPOSITION' | 'PLAYFAIR' | 'FOUR_SQUARE' | 'NIHILIST' | 'BIFID' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS';
 
 interface Profile {
   id: string;
@@ -96,8 +96,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=6aGaPtSneg8",
     question: "What was the first number Hullsome found?",
     jackpot: "$1,250,000",
-    targetItem: "Ancient Treasure Chest",
-    targetItemImage: "https://i.ibb.co/PsZ7SKsP/Hullsome-TN.png",
+    targetItem: "The Ring",
+    targetItemImage: "https://i.ibb.co/SwMn1K8S/Ring.png",
     cipherName: "Caesar Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=tvZ5O3RJfCQ",
     sponsor: {
@@ -121,8 +121,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=g5sZYv3edNE&t=313s",
     question: "What was the total number of Area 52 clues?",
     jackpot: "$1,500,000",
-    targetItem: "Ancient Golden Totem",
-    targetItemImage: "https://i.ibb.co/wh2WxJj9/Chris-Ramsey-TN.png",
+    targetItem: "Drill",
+    targetItemImage: "https://i.ibb.co/tTgrXWty/Drill.jpg",
     cipherName: "Rail Fence Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=1bzf5fmSusc",
     sponsor: {
@@ -146,8 +146,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=71RjddPuSjs&t=227s",
     question: "How many items did Hafu Go find?",
     jackpot: "$1,750,000",
-    targetItem: "Ancient Jade Dragon",
-    targetItemImage: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
+    targetItem: "Endoscope",
+    targetItemImage: "https://i.ibb.co/21ZbYtSL/Endo-Scope.jpg",
     cipherName: "Vigenère Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=J1o2zo6HleY",
     sponsor: {
@@ -170,8 +170,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=Z5NtYq3i-mk",
     question: "What color was the Brent Rivera treasure box?",
     jackpot: "$2,000,000",
-    targetItem: "Ancient Silver Chalice",
-    targetItemImage: "https://i.ibb.co/jk08Mdk2/Brent-Rivera-TN.png",
+    targetItem: "Impact driver",
+    targetItemImage: "https://i.ibb.co/HTzpQjZK/Imapact-Driver.jpg",
     cipherName: "Beaufort Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=PzjQH7aJNhs",
     sponsor: {
@@ -194,8 +194,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=nstp6Xopi-Q",
     question: "Where did FaZe Rug find his final clue?",
     jackpot: "$2,250,000",
-    targetItem: "Ancient Diamond Scepter",
-    targetItemImage: "https://i.ibb.co/PGyHJGw9/Faz-Rug-TN.png",
+    targetItem: "Headphones",
+    targetItemImage: "https://i.ibb.co/xq6Fn1M3/Headphones.jpg",
     cipherName: "Autokey Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=LdIqAtI-_CU"
   },
@@ -213,8 +213,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=4V16xkpb9NE",
     question: "What magic trick did Zach King perform?!",
     jackpot: "$2,500,000",
-    targetItem: "Ancient Crystal Orb",
-    targetItemImage: "https://i.ibb.co/4RYgg6K7/Zach-King-TN.png",
+    targetItem: "Spray smoke",
+    targetItemImage: "https://i.ibb.co/S4DnryVy/Smoke-Can.jpg",
     cipherName: "Transposition Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=6OtKgLtZlgg"
   },
@@ -232,8 +232,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=iogcY_4xGjo",
     question: "How many crew members were on the hunt with Mr. Beast?",
     jackpot: "$2,750,000",
-    targetItem: "Ancient Emerald Crown",
-    targetItemImage: "https://i.ibb.co/NgmQbWKD/Mr-Beast-TN.png",
+    targetItem: "Listening device",
+    targetItemImage: "https://i.ibb.co/QLTn7NS/Listening-Device.jpg",
     cipherName: "Playfair Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=PrpwPjG3jt4"
   },
@@ -251,8 +251,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=pLtHyLlLt4Y&t=36s",
     question: "What scientific gadget did Mark Rober use first?",
     jackpot: "$3,000,000",
-    targetItem: "Ancient Mechanical Heart",
-    targetItemImage: "https://i.ibb.co/DPqstmGQ/Mark-Rober-TN.png",
+    targetItem: "Stud Finder",
+    targetItemImage: "https://i.ibb.co/ymf5qPTt/Stud-Finder.jpg",
     cipherName: "Four-Square Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=HwiQ7-rL2w0"
   },
@@ -270,8 +270,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=dw-kwjzXSsA&t=335s",
     question: "Which Dude Perfect member found the first clue?",
     jackpot: "$3,250,000",
-    targetItem: "Ancient Trick Shot Trophy",
-    targetItemImage: "https://i.ibb.co/7xybRHT8/Dude-Perfect-TN.png",
+    targetItem: "Key 1 (Solis)",
+    targetItemImage: "https://i.ibb.co/shWyscy/Solis-Key.jpg",
     cipherName: "Nihilist Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=apQ11whepHo&t=11s"
   },
@@ -289,8 +289,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinShort: "https://www.youtube.com/watch?v=XeraCWlYFwA",
     question: "How long did it take JSTU to reach the location?",
     jackpot: "$3,500,000",
-    targetItem: "Ancient Abandoned Key",
-    targetItemImage: "https://i.ibb.co/8nt16wTK/JSTUTN.png",
+    targetItem: "Key 2 (Noctis)",
+    targetItemImage: "https://i.ibb.co/rJhpLhD/Noctis-Key.jpg",
     cipherName: "Bifid Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=V8rEh1b_Kmg"
   }
@@ -428,6 +428,12 @@ export default function App() {
   const [profiles, setProfiles] = useState<Profile[]>(INITIAL_PROFILES);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [expandedStatsIds, setExpandedStatsIds] = useState<string[]>([]);
+  const toggleStats = (id: string) => {
+    setExpandedStatsIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
   const [movieFocusedIndex, setMovieFocusedIndex] = useState(0);
   const [selectedYoutuberIndex, setSelectedYoutuberIndex] = useState<number | null>(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
@@ -574,7 +580,7 @@ export default function App() {
   };
 
   const renderScreen = () => {
-    if (selectedYoutuberIndex === null && (currentScreen === 'LEGAL' || currentScreen === 'EPISODE_SETTINGS' || currentScreen === 'ONE_DOLLAR_BILL')) {
+    if (selectedYoutuberIndex === null && (currentScreen === 'LEGAL' || currentScreen === 'EPISODE_SETTINGS')) {
       return null;
     }
 
@@ -632,68 +638,33 @@ export default function App() {
         </div>
 
         <div className="grid grid-cols-2 gap-8 w-full max-w-5xl relative z-10">
-          {/* Item Section */}
-          <div className="flex flex-col items-center space-y-4 bg-zinc-900/50 p-6 rounded-[40px] border-4 border-zinc-800 shadow-2xl backdrop-blur-md">
-            <span className="text-zinc-500 text-lg font-black uppercase tracking-[0.3em]">HUNTING FOR:</span>
-            <div className="w-full aspect-square bg-zinc-800 rounded-[24px] overflow-hidden border-4 border-white/5 p-3 shadow-inner">
-              <img 
-                src={currentYoutuber.targetItemImage || currentYoutuber.thumbnail} 
-                alt="Item" 
-                className="w-full h-full object-cover rounded-xl drop-shadow-2xl"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <Button 
-              variant="ghost"
-              className="text-white text-3xl h-auto font-black uppercase tracking-tighter italic hover:bg-white/10 hover:text-[#D4AF37] p-4 rounded-xl transition-all"
+          {/* THE HUNT Section */}
+          <div className="flex flex-col items-center space-y-4 bg-zinc-900/50 p-6 rounded-[40px] border-4 border-[#008044]/30 shadow-2xl backdrop-blur-md">
+            <span className="text-[#008044] text-lg font-black uppercase tracking-[0.3em]">THE HUNT:</span>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="relative w-full aspect-video rounded-[32px] overflow-hidden border-4 border-[#008044]/20 cursor-pointer group shadow-2xl"
               onClick={() => {
                 setActiveVideoUrl(currentYoutuber.TheHuntVideo);
                 setCurrentScreen('VIDEO_PLAYER');
               }}
             >
-              {currentYoutuber.targetItem || "Mystery Item"}
-            </Button>
-          </div>
-
-          {/* Cipher Section */}
-          <div className="flex flex-col items-center space-y-4 bg-zinc-900/50 p-6 rounded-[40px] border-4 border-[#008044]/30 shadow-2xl backdrop-blur-md">
-            <span className="text-[#008044] text-lg font-black uppercase tracking-[0.3em]">EQUIPPED CIPHER:</span>
-            <div 
-              className="w-full aspect-square bg-[#008044]/10 rounded-[24px] overflow-hidden border-4 border-[#008044]/20 flex items-center justify-center p-6 group cursor-pointer" 
-              onClick={() => {
-                if (currentYoutuber.cipherName === "Rail Fence Cipher") {
-                  setCurrentScreen('RAIL_FENCE');
-                } else if (currentYoutuber.cipherName === "Vigenère Cipher") {
-                  setCurrentScreen('VIGENERE');
-                } else if (currentYoutuber.cipherName === "Beaufort Cipher") {
-                  setCurrentScreen('BEAUFORT');
-                } else if (currentYoutuber.cipherName === "Autokey Cipher") {
-                  setCurrentScreen('AUTOKEY');
-                } else if (currentYoutuber.cipherName === "Transposition Cipher") {
-                  setCurrentScreen('TRANSPOSITION');
-                } else if (currentYoutuber.cipherName === "Playfair Cipher") {
-                  setCurrentScreen('PLAYFAIR');
-                } else if (currentYoutuber.cipherName === "Four-Square Cipher") {
-                  setCurrentScreen('FOUR_SQUARE');
-                } else if (currentYoutuber.cipherName === "Nihilist Cipher") {
-                  setCurrentScreen('NIHILIST');
-                } else if (currentYoutuber.cipherName === "Bifid Cipher") {
-                  setCurrentScreen('BIFID');
-                } else {
-                  setCurrentScreen('CAESAR_WHEEL');
-                }
-              }}
-            >
-              <div className="w-full h-full border-4 border-[#008044] rounded-full flex flex-col items-center justify-center p-3 relative group-hover:scale-105 transition-transform duration-500">
-                <div className="absolute inset-0 bg-[#008044]/5 animate-pulse rounded-full" />
-                <div className="w-24 h-24 rounded-full border-4 border-[#D4AF37] flex items-center justify-center p-2">
-                  <img src="https://i.ibb.co/67vY2yYj/Gold-X-Green-R.png" alt="XR Logo" className="w-full h-full object-contain grayscale-0" />
+              <img 
+                src={currentYoutuber.TheHuntThumbNail} 
+                alt="The Hunt" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex flex-col items-center justify-center">
+                <div className="w-20 h-20 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg">
+                  <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-black border-b-[12px] border-b-transparent ml-2" />
                 </div>
-                <span className="text-white text-3xl font-black uppercase tracking-tighter mt-3 break-words text-center leading-tight">
-                  {currentYoutuber.cipherName || "Caesar Wheel"}
-                </span>
               </div>
-            </div>
+              <div className="absolute bottom-4 right-4 bg-black/80 px-3 py-1 rounded text-white font-mono text-xs">
+                1:23
+              </div>
+            </motion.div>
             <Button 
               className="w-full h-16 bg-zinc-800 text-white hover:bg-zinc-700 text-xl font-black uppercase tracking-widest rounded-xl transition-all border-2 border-white/5"
               onClick={() => {
@@ -723,6 +694,22 @@ export default function App() {
               Try out the Cipher
             </Button>
           </div>
+
+          {/* Item Section */}
+          <div className="flex flex-col items-center space-y-4 bg-zinc-900/50 p-6 rounded-[40px] border-4 border-zinc-800 shadow-2xl backdrop-blur-md">
+            <span className="text-zinc-500 text-lg font-black uppercase tracking-[0.3em]">HUNTING FOR:</span>
+            <div className="w-full aspect-square bg-zinc-800 rounded-[24px] overflow-hidden border-4 border-white/5 p-3 shadow-inner">
+              <img 
+                src={currentYoutuber.targetItemImage || currentYoutuber.thumbnail} 
+                alt="Item" 
+                className="w-full h-full object-cover rounded-xl drop-shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <span className="text-white text-3xl font-black uppercase tracking-tighter italic p-4 text-center">
+              {currentYoutuber.targetItem || "Mystery Item"}
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-8 w-full max-w-2xl relative z-10">
@@ -735,9 +722,10 @@ export default function App() {
               }
             }}
           >
-            <div className="flex flex-col items-center gap-1">
-              <span>Understand what {currentYoutuber.cipherName}</span>
-              <span>is about</span>
+            <div className="flex flex-col items-center gap-0 leading-tight">
+              <span className="text-white">Understand what</span>
+              <span className="text-[#D4AF37]">{currentYoutuber.cipherName}</span>
+              <span className="text-white">is about</span>
             </div>
             <ArrowRight className="w-8 h-8 ml-4 group-hover:translate-x-2 transition-transform shrink-0" />
           </Button>
@@ -1192,7 +1180,7 @@ export default function App() {
                   <img 
                     src="https://i.ibb.co/kgXgqkGB/CKXRLogo-Hor-Z.png" 
                     alt="CKXR Logo" 
-                    className="w-[1000px] md:w-[1500px] lg:w-[2000px] h-auto object-contain drop-shadow-2xl -ml-4 cursor-pointer" 
+                    className="w-[1000px] md:w-[1500px] lg:w-[2000px] h-auto object-contain drop-shadow-2xl -ml-4 -mt-4 cursor-pointer" 
                     onClick={() => {
                       setSelectedYoutuberIndex(movieFocusedIndex);
                       setCurrentScreen('EPISODE_DETAIL');
@@ -1204,7 +1192,7 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="max-w-4xl pt-20 ml-6 md:ml-8 lg:ml-[12px]">
+                <div className="max-w-4xl pt-14 ml-6 md:ml-8 lg:ml-[12px]">
                   <p className="text-3xl text-zinc-300 leading-relaxed font-medium">
                     Step into a 360° experience and join top content creators in one massive hunt to uncover hidden treasures in real locations. While they take on the journey, you enter your own version of the game—solving, exploring, and unlocking clues in real time for a chance to win monthly prizes.
                   </p>
@@ -1229,7 +1217,7 @@ export default function App() {
                 </div>
               </motion.div>
 
-              <div className="pt-60 pr-12">
+              <div className="pt-24 pr-12">
                 {(() => {
                   const currentEpisode = YOUTUBE_DATA[movieFocusedIndex];
                   const sponsor = currentEpisode.sponsor || DEFAULT_SPONSOR;
@@ -1250,7 +1238,7 @@ export default function App() {
             </div>
 
             {/* Bottom: Continue the Hunt & Carousel */}
-            <div className="space-y-4">
+            <div className="mt-16 space-y-4">
               <div className="space-y-4 px-2">
                 <h3 className="text-xl font-bold text-white uppercase tracking-widest opacity-80">Continue the Hunt</h3>
                 <div 
@@ -1368,31 +1356,68 @@ export default function App() {
               More Info
             </motion.h1>
             
-            <div className="flex gap-12">
+            <div className="flex gap-8">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-[450px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-6 shadow-2xl relative overflow-hidden"
-                onClick={() => setCurrentScreen('PROFILE_SELECTION')}
+                className="w-[350px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
+                onClick={() => setCurrentScreen('ONE_DOLLAR_BILL')}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
-                <div className="w-24 h-24 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 relative z-10">
-                  <User className="w-12 h-12 text-black" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#22c55e]/5 to-transparent" />
+                <div className="w-20 h-20 bg-[#22c55e] rounded-full flex items-center justify-center shadow-lg shadow-[#22c55e]/20 relative z-10">
+                  <span className="text-3xl font-black text-black leading-none">$1</span>
                 </div>
-                <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter relative z-10">Avatar</h3>
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter relative z-10">$1 Bill</h3>
               </motion.div>
 
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-[450px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-6 shadow-2xl relative overflow-hidden"
-                onClick={() => setCurrentScreen('ONE_DOLLAR_BILL')}
+                className="w-[350px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
+                onClick={() => setCurrentScreen('PROFILE_SELECTION')}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#22c55e]/5 to-transparent" />
-                <div className="w-24 h-24 bg-[#22c55e] rounded-full flex items-center justify-center shadow-lg shadow-[#22c55e]/20 relative z-10">
-                  <span className="text-4xl font-black text-black leading-none">$1</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
+                <div className="w-20 h-20 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 relative z-10">
+                  <User className="w-10 h-10 text-black" />
                 </div>
-                <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter relative z-10">$1 Bill</h3>
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter relative z-10">Avatar</h3>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-[350px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
+                onClick={() => setCurrentScreen('PLAYERS_INFO')}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
+                <div className="w-20 h-20 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 relative z-10">
+                  <div className="w-10 h-10 border-4 border-black rounded-full flex items-center justify-center p-1">
+                    <img src="https://i.ibb.co/67vY2yYj/Gold-X-Green-R.png" alt="XR Logo" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter relative z-10">Players Info</h3>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-[350px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
+                onClick={() => setCurrentScreen('LEADER_BOARD')}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
+                <div className="w-20 h-20 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 relative z-10">
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-black">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                      <path d="M4 22h16" />
+                      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                      <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter relative z-10">Leader Board</h3>
               </motion.div>
             </div>
 
@@ -1423,6 +1448,517 @@ export default function App() {
               setCurrentScreen('PROFILE_SELECTION');
             }}
           />
+        );
+
+      case 'PLAYERS_INFO':
+        const EPISODE_PERFORMANCE = [
+          { keyword: "data", gameCode: "smart phone", time: "2:43:58", idCode: "L", seatCode: "Z" },
+          { keyword: "chip", gameCode: "tasty", time: "3:13:24", idCode: "L12", seatCode: "W" },
+          { keyword: "Blue", gameCode: "pending", time: "pending", idCode: "F134", seatCode: "pending" },
+        ];
+
+        return (
+          <div className="flex-1 flex flex-col items-center justify-start py-10 px-6 space-y-12 overflow-y-auto custom-scrollbar h-full">
+            {/* Header: User Identification */}
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-32 h-32 rounded-full border-4 border-[#D4AF37] overflow-hidden shadow-2xl bg-zinc-900">
+                <Avatar className="w-full h-full">
+                  <AvatarImage src={selectedProfile?.avatar} className="object-cover" />
+                  <AvatarFallback className={selectedProfile?.color}>{selectedProfile?.name?.[0]}</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="text-center">
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">
+                  {selectedProfile?.name}
+                </h3>
+                <p className="text-[#D4AF37] font-mono text-5xl font-black tracking-widest drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                  {selectedProfile?.serial || globalSerial}
+                </p>
+              </div>
+            </div>
+
+            {/* Episode List Container */}
+            <div className="w-full max-w-6xl space-y-4 pb-20">
+              <div className="grid grid-cols-12 gap-4 px-6 text-white text-xs font-black uppercase tracking-[0.1em] mb-2 items-end">
+                <div className="col-span-1">Ep</div>
+                <div className="col-span-2">Personality</div>
+                <div className="col-span-1 text-center">Sponsor<br/>Ad</div>
+                <div className="col-span-2 text-center">Sponsor<br/>Keyword</div>
+                <div className="col-span-2 text-center">Game<br/>Code</div>
+                <div className="col-span-2 text-center">Cracked Code<br/>Time</div>
+                <div className="col-span-1 text-center">$1<br/>Code</div>
+                <div className="col-span-1 text-center">Seat Letter<br/>Code</div>
+              </div>
+
+              <div className="space-y-3">
+                {YOUTUBE_DATA.map((youtuber, i) => {
+                  const billLevel = DOLLAR_BILL_LEVELS[i];
+                  const sponsor = youtuber.sponsor;
+                  const performance = EPISODE_PERFORMANCE[i];
+                  
+                  // Border and Status logic
+                  let borderClass = 'border-zinc-800 opacity-40';
+                  let logoClass = 'grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100';
+                  let mainTextClass = 'text-zinc-700'; 
+                  let subTextClass = 'text-zinc-800';
+                  
+                  if (i <= 2) { // Ep 1, 2, 3
+                    if (i === 0 || i === 1) { // Green for 1, 2
+                      borderClass = 'border-[#008044] opacity-100 shadow-[0_0_20px_rgba(0,128,68,0.15)]';
+                    } else { // Orange for 3
+                      borderClass = 'border-[#f97316] opacity-100 shadow-[0_0_20px_rgba(249,115,22,0.15)]';
+                    }
+                    logoClass = 'grayscale-0 opacity-100';
+                    mainTextClass = 'text-[#D4AF37]';
+                    subTextClass = 'text-zinc-500';
+                  } else if (i === 3) { // Ep 4 (Red)
+                    borderClass = 'border-[#ef4444] opacity-100 shadow-[0_0_20px_rgba(239,68,68,0.15)]';
+                    // Gray out Pringles specifically for Ep 4
+                    logoClass = 'grayscale opacity-30';
+                    mainTextClass = 'text-zinc-700 opacity-40';
+                    subTextClass = 'text-zinc-800 opacity-40';
+                  } else { // Ep 5-10
+                    borderClass = 'border-zinc-800 opacity-40';
+                    logoClass = 'grayscale opacity-30';
+                    mainTextClass = 'text-zinc-700 opacity-40';
+                    subTextClass = 'text-zinc-800 opacity-40';
+                  }
+                  
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`grid grid-cols-12 gap-4 items-center bg-zinc-900/60 p-4 rounded-2xl border-4 ${borderClass} hover:border-[#D4AF37]/30 transition-all group`}
+                    >
+                      {/* Ep Number */}
+                      <div className="col-span-1">
+                        <span className={`${i <= 2 ? 'text-white' : 'text-zinc-600'} text-2xl font-black font-mono italic`}>#{i + 1}</span>
+                      </div>
+
+                      {/* Personality Info */}
+                      <div className="col-span-2 flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full border-2 border-[#D4AF37] overflow-hidden flex-shrink-0">
+                          <img src={youtuber.avatar} alt={youtuber.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className={`${i <= 2 ? 'text-white' : 'text-zinc-400 opacity-40'} font-black uppercase italic tracking-tighter text-sm truncate`}>{youtuber.name}</span>
+                          <span className={`${i <= 2 ? 'text-red-600' : 'text-red-900 opacity-40'} font-bold uppercase text-[8px] tracking-widest truncate`}>{youtuber.teamName}</span>
+                        </div>
+                      </div>
+
+                      {/* Sponsor Ad Logo */}
+                      <div className="col-span-1 flex justify-center">
+                        {sponsor ? (
+                          <img 
+                            src={sponsor.logo} 
+                            alt={sponsor.name} 
+                            className={`h-10 object-contain transition-all ${logoClass}`} 
+                          />
+                        ) : null}
+                      </div>
+
+                      {/* Sponsor Keyword */}
+                      <div className="col-span-2 flex flex-col items-center">
+                        <span className={`${mainTextClass} font-black uppercase italic tracking-tight text-base`}>
+                          {performance ? performance.keyword : "---"}
+                        </span>
+                        <span className={`${subTextClass} text-[8px] font-bold uppercase tracking-widest`}>
+                          {performance ? "FOUND" : "LOCKED"}
+                        </span>
+                      </div>
+
+                      {/* Game Code */}
+                      <div className="col-span-2 flex flex-col items-center space-y-1">
+                        <span className={`${mainTextClass} font-black font-mono text-base`}>
+                          {performance ? performance.gameCode : "****-****"}
+                        </span>
+                        <span className={`${subTextClass} text-[8px] font-bold uppercase tracking-widest`}>
+                          {performance ? (performance.gameCode === "pending" ? "PENDING" : "CRACKED") : "PENDING"}
+                        </span>
+                      </div>
+
+                      {/* Cracked Code Time */}
+                      <div className="col-span-2 flex flex-col items-center space-y-1">
+                        <span className={`${mainTextClass} font-black font-mono text-base`}>
+                          {performance ? performance.time : "--:--"}
+                        </span>
+                        <span className={`${subTextClass} text-[8px] font-bold uppercase tracking-widest`}>
+                          {performance ? (performance.time === "Pending" ? "PENDING" : "COMPLETED") : "PENDING"}
+                        </span>
+                      </div>
+
+                      {/* $1 Code Column */}
+                      <div className="col-span-1 flex flex-col items-center">
+                        <span className={`${i <= 2 ? 'text-[#D4AF37]' : 'text-zinc-600'} font-black text-base uppercase font-mono`}>
+                          {i <= 2 ? (performance ? performance.idCode : billLevel.level) : `ID ${billLevel.level}`}
+                        </span>
+                        <span className={`${subTextClass} text-[8px] font-bold uppercase tracking-widest`}>
+                          LOCKED
+                        </span>
+                      </div>
+
+                      {/* Seat Letter Code */}
+                      <div className="col-span-1 flex flex-col items-center">
+                        <span className={`${mainTextClass} font-black font-mono text-base`}>
+                          {performance ? performance.seatCode : "---"}
+                        </span>
+                        <span className={`${subTextClass} text-[8px] font-bold uppercase tracking-widest`}>
+                          {performance ? (performance.seatCode === "pending" ? "LOCKED" : "ISSUED") : "LOCKED"}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Leadership Board Button */}
+            <div className="flex flex-col items-center pt-8 pb-32 w-full">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentScreen('LEADER_BOARD')}
+                className="px-12 py-6 bg-zinc-900 border-4 border-[#D4AF37] rounded-3xl shadow-[0_0_40px_rgba(212,175,55,0.15)] group hover:bg-[#D4AF37] transition-all duration-300 flex items-center space-x-4"
+              >
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D4AF37] group-hover:text-black transition-colors">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                  </svg>
+                </div>
+                <span className="text-3xl font-black text-[#D4AF37] group-hover:text-black uppercase italic tracking-tighter">
+                  Leadership Board
+                </span>
+              </motion.button>
+            </div>
+
+            {/* Back Button */}
+            <Button 
+              variant="ghost" 
+              className="fixed bottom-10 text-zinc-500 hover:text-white text-xl uppercase tracking-widest"
+              onClick={() => setCurrentScreen('MORE_INFO_MENU')}
+            >
+              Back to Menu
+            </Button>
+          </div>
+        );
+
+      case 'LEADER_BOARD':
+        return (
+          <div className="flex-1 flex flex-col items-center justify-start py-10 px-6 space-y-16 overflow-y-auto custom-scrollbar h-full w-full max-w-full">
+            {/* Header */}
+            <div className="text-center space-y-4">
+              <motion.h1 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-7xl font-black text-white italic tracking-widest uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+              >
+                Leader Board
+              </motion.h1>
+              <div className="w-48 h-1.5 bg-[#D4AF37] mx-auto rounded-full shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
+            </div>
+
+            {/* Two Columns Layout */}
+            <div className="grid grid-cols-2 gap-12 w-full px-12">
+              {/* Friends and Family Leaders Column */}
+              <div className="flex flex-col space-y-8">
+                <div className="bg-zinc-900 border-4 border-zinc-800 p-6 rounded-2xl flex items-center justify-center shadow-xl">
+                  <h2 className="text-3xl font-black text-[#D4AF37] uppercase italic tracking-tighter">
+                    Friends and Family Leaders
+                  </h2>
+                </div>
+                
+                <div className="flex-1 bg-zinc-900/40 border-2 border-zinc-800/50 rounded-[40px] p-6 space-y-4">
+                  {[
+                    { name: 'Liam', time: '7:12:47', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' },
+                    { name: 'Noah', time: '7:25:12', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
+                    { name: 'Oliver', time: '7:38:59', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop' },
+                    { name: 'Emma', time: '7:52:30', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
+                    { name: 'Charlotte', time: '8:05:15', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop' },
+                    { name: 'James', time: '8:18:42', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' },
+                    { name: 'Sophia', time: '8:31:05', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop' },
+                    { name: 'Amelia', time: '8:40:22', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop' },
+                    { name: 'Benjamin', time: '8:45:10', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop' },
+                    { name: 'Mia', time: '8:52:34', avatar: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop' }
+                  ].map((leader, index) => {
+                    const breakdownId = `F-${leader.name}`;
+                    const isExpandable = ['Liam', 'Noah', 'Oliver'].includes(leader.name);
+                    const isExpanded = expandedStatsIds.includes(breakdownId);
+                    
+                    const breakdowns: Record<string, any[]> = {
+                      'Liam': [
+                        { name: 'Hullsome', time: '2:15:20', avatar: 'https://i.ibb.co/nMxk4hFV/Hullsome.png', ep: 1 },
+                        { name: 'Chris Ramsey', time: '2:30:15', avatar: 'https://i.ibb.co/jPn3tWQ3/Chris-Ramsey.png', ep: 2 },
+                        { name: 'Hafu Go', time: '2:27:12', avatar: 'https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png', ep: 3 }
+                      ],
+                      'Noah': [
+                        { name: 'Hullsome', time: '2:20:10', avatar: 'https://i.ibb.co/nMxk4hFV/Hullsome.png', ep: 1 },
+                        { name: 'Chris Ramsey', time: '2:35:12', avatar: 'https://i.ibb.co/jPn3tWQ3/Chris-Ramsey.png', ep: 2 },
+                        { name: 'Hafu Go', time: '2:29:50', avatar: 'https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png', ep: 3 }
+                      ],
+                      'Oliver': [
+                        { name: 'Hullsome', time: '2:30:15', avatar: 'https://i.ibb.co/nMxk4hFV/Hullsome.png', ep: 1 },
+                        { name: 'Chris Ramsey', time: '2:40:22', avatar: 'https://i.ibb.co/jPn3tWQ3/Chris-Ramsey.png', ep: 2 },
+                        { name: 'Hafu Go', time: '2:28:22', avatar: 'https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png', ep: 3 }
+                      ]
+                    };
+
+                    return (
+                      <div key={index} className="space-y-2">
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => isExpandable && toggleStats(breakdownId)}
+                          className={`flex items-center justify-between bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 transition-all group ${isExpandable ? 'cursor-pointer hover:bg-zinc-800/80 hover:border-[#D4AF37]/50' : 'hover:border-[#D4AF37]/30'}`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 rounded-full border-2 border-zinc-700 overflow-hidden group-hover:border-[#D4AF37] transition-all">
+                              <img src={leader.avatar} alt={leader.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex flex-col">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-white font-black uppercase italic tracking-tighter text-lg">{leader.name}</span>
+                                {isExpandable && (
+                                  <motion.div
+                                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                                    className="text-[#D4AF37]"
+                                  >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                      <path d="m6 9 6 6 6-6"/>
+                                    </svg>
+                                  </motion.div>
+                                )}
+                              </div>
+                              <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Rank #{index + 1}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[#D4AF37] font-black font-mono text-xl tracking-tight">{leader.time}</span>
+                            <div className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Completed</div>
+                          </div>
+                        </motion.div>
+                        
+                        <AnimatePresence>
+                          {isExpanded && breakdowns[leader.name] && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden bg-zinc-950/40 rounded-2xl border border-zinc-800/50 mx-2"
+                            >
+                              <div className="p-4 space-y-3">
+                                <div className="text-zinc-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Episode Breakdown</div>
+                                {breakdowns[leader.name].map((ep, epIndex) => (
+                                  <div key={epIndex} className="flex items-center justify-between border-b border-zinc-800/30 pb-2 last:border-0 last:pb-0">
+                                    <div className="flex items-center space-x-3">
+                                      <div className="w-8 h-8 rounded-full border border-zinc-700 overflow-hidden">
+                                        <img src={ep.avatar} alt={ep.name} className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-zinc-300 font-bold uppercase italic tracking-tighter text-sm">{ep.name}</span>
+                                        <span className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Episode {ep.ep}</span>
+                                      </div>
+                                    </div>
+                                    <span className="text-[#D4AF37]/70 font-mono text-sm">{ep.time}</span>
+                                  </div>
+                                ))}
+                                <div className="pt-2 border-t border-zinc-800 flex justify-between items-center">
+                                  <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Total Hunt Time</span>
+                                  <span className="text-[#D4AF37] font-black font-mono text-sm">{leader.time}</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-center pt-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center space-x-2 px-8 py-3 bg-green-500/10 border-2 border-green-500 rounded-xl text-green-500 font-bold uppercase tracking-widest hover:bg-green-500 hover:text-black transition-all duration-300 shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-green-500">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <line x1="19" y1="8" x2="19" y2="14" />
+                      <line x1="16" y1="11" x2="22" y2="11" />
+                    </svg>
+                    <span>Invite Friends</span>
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* National Leaders Column */}
+              <div className="flex flex-col space-y-8">
+                <div className="bg-zinc-900 border-4 border-zinc-800 p-6 rounded-2xl flex items-center justify-center shadow-xl">
+                  <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">
+                    National Leaders
+                  </h2>
+                </div>
+                
+                <div className="flex-1 bg-zinc-900/40 border-2 border-zinc-800/50 rounded-[40px] p-6 space-y-4 max-h-[800px] overflow-y-auto custom-scrollbar">
+                  {[
+                    { name: 'Jack', time: '6:34:52', avatar: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=100&h=100&fit=crop' },
+                    { name: 'Emily', time: '6:35:10', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop' },
+                    { name: 'Alexander', time: '6:36:45', avatar: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=100&h=100&fit=crop' },
+                    { name: 'Isabella', time: '6:38:22', avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=100&h=100&fit=crop' },
+                    { name: 'William', time: '6:40:05', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop' },
+                    { name: 'Olivia', time: '6:42:15', avatar: 'https://images.unsplash.com/photo-1546961329-78bef0414d7c?w=100&h=100&fit=crop' },
+                    { name: 'Henry', time: '6:43:55', avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=100&h=100&fit=crop' },
+                    { name: 'Ava', time: '6:45:30', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e16fd3c?w=100&h=100&fit=crop' },
+                    { name: 'Sebastian', time: '6:47:00', avatar: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=100&h=100&fit=crop' },
+                    { name: 'Lily', time: '6:48:45', avatar: 'https://images.unsplash.com/photo-1548142813-c348350df52b?w=100&h=100&fit=crop' },
+                    { name: 'Daniel', time: '6:50:20', avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop' },
+                    { name: 'Chloe', time: '6:52:10', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop' },
+                    { name: 'Matthew', time: '6:53:50', avatar: 'https://images.unsplash.com/photo-1500048993953-d23a43626efc?w=100&h=100&fit=crop' },
+                    { name: 'Harper', time: '6:55:25', avatar: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=100&h=100&fit=crop' },
+                    { name: 'Joseph', time: '6:57:10', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop' },
+                    { name: 'Evelyn', time: '6:58:55', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop' },
+                    { name: 'David', time: '7:00:30', avatar: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=100&h=100&fit=crop' },
+                    { name: 'Aria', time: '7:01:45', avatar: 'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=100&h=100&fit=crop' },
+                    { name: 'Samuel', time: '7:02:50', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
+                    { name: 'Gianna', time: '7:03:55', avatar: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop' },
+                    { name: 'Julian', time: '7:04:40', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop' },
+                    { name: 'Mila', time: '7:05:30', avatar: 'https://images.unsplash.com/photo-1529139513065-07b2ee722693?w=100&h=100&fit=crop' },
+                    { name: 'Anthony', time: '7:06:25', avatar: 'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?w=100&h=100&fit=crop' },
+                    { name: 'Eleanor', time: '7:07:40', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e16fd3c?w=100&h=100&fit=crop' },
+                    { name: 'Lucas', time: '7:08:45', avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop' }
+                  ].map((leader, index) => {
+                    const breakdownId = `N-${leader.name}`;
+                    const isExpandable = ['Jack', 'Emily', 'Alexander'].includes(leader.name);
+                    const isExpanded = expandedStatsIds.includes(breakdownId);
+                    
+                    const breakdowns: Record<string, any[]> = {
+                      'Jack': [
+                        { name: 'Hullsome', time: '2:05:12', avatar: 'https://i.ibb.co/nMxk4hFV/Hullsome.png', ep: 1 },
+                        { name: 'Chris Ramsey', time: '2:15:20', avatar: 'https://i.ibb.co/jPn3tWQ3/Chris-Ramsey.png', ep: 2 },
+                        { name: 'Hafu Go', time: '2:14:20', avatar: 'https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png', ep: 3 }
+                      ],
+                      'Emily': [
+                        { name: 'Hullsome', time: '2:06:10', avatar: 'https://i.ibb.co/nMxk4hFV/Hullsome.png', ep: 1 },
+                        { name: 'Chris Ramsey', time: '2:16:15', avatar: 'https://i.ibb.co/jPn3tWQ3/Chris-Ramsey.png', ep: 2 },
+                        { name: 'Hafu Go', time: '2:12:45', avatar: 'https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png', ep: 3 }
+                      ],
+                      'Alexander': [
+                        { name: 'Hullsome', time: '2:07:20', avatar: 'https://i.ibb.co/nMxk4hFV/Hullsome.png', ep: 1 },
+                        { name: 'Chris Ramsey', time: '2:17:15', avatar: 'https://i.ibb.co/jPn3tWQ3/Chris-Ramsey.png', ep: 2 },
+                        { name: 'Hafu Go', time: '2:12:10', avatar: 'https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png', ep: 3 }
+                      ]
+                    };
+
+                    return (
+                      <div key={index} className="space-y-2">
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          onClick={() => isExpandable && toggleStats(breakdownId)}
+                          className={`flex items-center justify-between bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 transition-all group ${isExpandable ? 'cursor-pointer hover:bg-zinc-800/80 hover:border-white/50' : 'hover:border-white/30'}`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 rounded-full border-2 border-zinc-700 overflow-hidden group-hover:border-white transition-all">
+                              <img src={leader.avatar} alt={leader.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex flex-col">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-white font-black uppercase italic tracking-tighter text-lg">{leader.name}</span>
+                                {isExpandable && (
+                                  <motion.div
+                                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                                    className="text-white"
+                                  >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                      <path d="m6 9 6 6 6-6"/>
+                                    </svg>
+                                  </motion.div>
+                                )}
+                              </div>
+                              <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Rank #{index + 1}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-white font-black font-mono text-xl tracking-tight">{leader.time}</span>
+                            <div className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Completed</div>
+                          </div>
+                        </motion.div>
+
+                        <AnimatePresence>
+                          {isExpanded && breakdowns[leader.name] && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden bg-zinc-950/40 rounded-2xl border border-zinc-800/50 mx-2"
+                            >
+                              <div className="p-4 space-y-3">
+                                <div className="text-zinc-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Episode Breakdown</div>
+                                {breakdowns[leader.name].map((ep, epIndex) => (
+                                  <div key={epIndex} className="flex items-center justify-between border-b border-zinc-800/30 pb-2 last:border-0 last:pb-0">
+                                    <div className="flex items-center space-x-3">
+                                      <div className="w-8 h-8 rounded-full border border-zinc-700 overflow-hidden">
+                                        <img src={ep.avatar} alt={ep.name} className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-zinc-300 font-bold uppercase italic tracking-tighter text-sm">{ep.name}</span>
+                                        <span className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Episode {ep.ep}</span>
+                                      </div>
+                                    </div>
+                                    <span className="text-white/70 font-mono text-sm">{ep.time}</span>
+                                  </div>
+                                ))}
+                                <div className="pt-2 border-t border-zinc-800 flex justify-between items-center">
+                                  <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Total Hunt Time</span>
+                                  <span className="text-white font-black font-mono text-sm">{leader.time}</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="pb-10 pt-8 flex items-center space-x-12">
+              <Button 
+                variant="ghost" 
+                className="text-zinc-500 hover:text-white text-xl uppercase tracking-widest"
+                onClick={() => setCurrentScreen('MORE_INFO_MENU')}
+              >
+                Back to Menu
+              </Button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentScreen('PLAYERS_INFO')}
+                className="px-8 py-3 bg-zinc-900 border-2 border-[#D4AF37] rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.1)] group hover:bg-[#D4AF37] transition-all duration-300 flex items-center space-x-3"
+              >
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D4AF37] group-hover:text-black transition-colors">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <span className="text-xl font-black text-[#D4AF37] group-hover:text-black uppercase italic tracking-tighter">
+                  Players Profile
+                </span>
+              </motion.button>
+            </div>
+          </div>
         );
 
       case 'EPISODE_DETAIL':

@@ -64,7 +64,7 @@ export const TVContainer: React.FC<TVContainerProps> = ({ children, backgroundIm
       <motion.main 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative z-10 w-full h-full p-[5%] flex flex-col"
+        className="relative z-10 w-full h-full pt-8 px-[5%] pb-[5%] flex flex-col"
       >
         {children}
       </motion.main>
