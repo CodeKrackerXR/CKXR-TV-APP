@@ -1,6 +1,6 @@
 {
   "name": "The CodeXR Challenge",
-  "description": "A polished TV UI experience for streaming and media management.",
+  "description": "An interactive spy-themed cipher challenge platform with Caesar and Rail Fence decryption missions.",
   "requestFramePermissions": ["camera"],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

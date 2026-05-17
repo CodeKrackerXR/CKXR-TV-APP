@@ -6,6 +6,11 @@ import { LucideShieldCheck, LucideChevronLeft, LucideInfo, LucideZap, LucideGrid
 
 interface VigenereCipherPageProps {
  onBack: () => void;
+ onNavigateToGame?: () => void;
+ inputText: string;
+ setInputText: (val: string) => void;
+ keyword: string;
+ setKeyword: (val: string) => void;
  youtuber?: {
    name: string;
    avatar: string;
@@ -15,15 +20,13 @@ interface VigenereCipherPageProps {
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, youtuber }) => {
- const [inputText, setInputText] = useState('VAULT');
- const [key, setKey] = useState('CODE');
- const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
+export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, onNavigateToGame, inputText, setInputText, keyword: initialKey, setKeyword, youtuber }) => {
+  const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
 
- const { result, steps } = useMemo(() => {
-   const cleanText = inputText.toUpperCase().replace(/[^A-Z]/g, '');
-   const cleanKey = key.toUpperCase().replace(/[^A-Z]/g, '');
-   if (!cleanText || !cleanKey) return { result: '', steps: [] };
+  const { result, steps } = useMemo(() => {
+    const cleanText = inputText.toUpperCase().replace(/[^A-Z]/g, '');
+    const cleanKey = initialKey.toUpperCase().replace(/[^A-Z]/g, '');
+    if (!cleanText || !cleanKey) return { result: '', steps: [] };
 
    let res = '';
    const currentSteps: any[] = [];
@@ -31,24 +34,24 @@ export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, 
    for (let i = 0; i < cleanText.length; i++) {
        const char = cleanText[i];
        const keyChar = cleanKey[i % cleanKey.length];
-      
+       
        const charIdx = ALPHABET.indexOf(char);
        const keyIdx = ALPHABET.indexOf(keyChar);
-      
+       
        let targetIdx;
        if (mode === 'ENCODE') {
            targetIdx = (charIdx + keyIdx) % 26;
        } else {
            targetIdx = (charIdx - keyIdx + 26) % 26;
        }
-      
+       
        const resultChar = ALPHABET[targetIdx];
        res += resultChar;
        currentSteps.push({ char, keyChar, resultChar, charIdx, keyIdx, targetIdx });
    }
 
    return { result: res, steps: currentSteps };
- }, [inputText, key, mode]);
+ }, [inputText, initialKey, mode]);
 
  const teamName = youtuber?.teamName || (youtuber?.name === "Chris Ramsey" ? "Team Area 52" : `Team ${youtuber?.name.split(' ')[0] || 'Unknown'}`);
 
@@ -64,26 +67,18 @@ export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, 
      />
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
 
-     {/* Header */}
-     <div className="relative z-50 w-full flex justify-between border-b border-white/10 bg-black/40 backdrop-blur-sm h-20 md:h-24 items-center px-4 md:px-8">
-       <button
-         onClick={onBack}
-         className="flex items-center gap-2 group hover:text-[#D4AF37] transition-colors"
-       >
-         <LucideChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-         <span className="font-bold uppercase tracking-widest text-sm">Return to Hub</span>
-       </button>
-      
-       <div className="text-white flex items-center gap-1">
-         <span className="text-xl font-black uppercase tracking-tighter">The Code</span>
-         <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] flex items-center justify-center p-1 overflow-hidden">
-           <img src="https://i.ibb.co/67vY2yYj/Gold-X-Green-R.png" alt="XR Logo" className="w-full h-full object-contain" />
-         </div>
-         <span className="text-xl font-black uppercase tracking-tighter">Challenge</span>
-       </div>
-      
-       <div className="w-24 hidden md:block" />
-     </div>
+     {/* Header - No logo, Return button flush left */}
+     <div className="relative z-[70] w-full pt-8 px-8">
+        <div className="w-full max-w-7xl mx-auto flex items-center">
+            <button
+                onClick={onBack}
+                className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/60 px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md shadow-2xl"
+            >
+                <LucideChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform text-[#D4AF37]" />
+                <span className="font-bold uppercase tracking-widest text-[10px] text-white">Return to Hub</span>
+            </button>
+        </div>
+      </div>
 
      <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl flex-1">
        <div className="text-center mb-12">
@@ -108,19 +103,8 @@ export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, 
          </motion.div>
        </div>
 
-       {youtuber && (
-         <div className="flex items-center justify-center gap-4 mb-12 bg-zinc-900/40 border border-[#D4AF37]/20 p-4 rounded-2xl backdrop-blur-md max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-full border-2 border-[#D4AF37] overflow-hidden">
-              <img src={youtuber.avatar} alt={youtuber.name} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h3 className="font-black text-xl text-[#D4AF37] uppercase tracking-wider italic">{youtuber.name}</h3>
-              <p className="font-bold text-xs text-red-600 uppercase tracking-widest">{teamName}</p>
-            </div>
-         </div>
-       )}
-
        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
          {/* Controls */}
          <div className="lg:col-span-4 space-y-6">
            <div className="bg-zinc-900/80 border border-[#D4AF37]/30 p-6 rounded-2xl shadow-2xl backdrop-blur-xl">
@@ -152,9 +136,9 @@ export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, 
                   <label className="block text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-black mb-1">Repeating Key</label>
                   <input
                    type="text"
-                   value={key}
-                   onChange={(e) => setKey(e.target.value.substring(0, 15).toUpperCase())}
-                   className="w-full bg-black/60 border border-[#D4AF37]/20 rounded-lg p-3 font-bold text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] tracking-widest"
+                   value={initialKey}
+                   onChange={(e) => setKeyword(e.target.value.substring(0, 15).toUpperCase())}
+                   className={`w-full bg-black/60 border border-[#D4AF37]/20 rounded-lg p-3 font-bold focus:outline-none focus:border-[#D4AF37] tracking-widest transition-colors ${initialKey === 'CODE' ? 'text-white' : 'text-green-500'}`}
                    placeholder="KEYWORD..."
                  />
                </div>
@@ -164,7 +148,7 @@ export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, 
                  <textarea
                    value={inputText}
                    onChange={(e) => setInputText(e.target.value.toUpperCase())}
-                   className="w-full bg-black/60 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] resize-none"
+                   className={`w-full bg-black/60 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg focus:outline-none focus:border-[#D4AF37] resize-none transition-colors ${inputText === 'VAULT' ? 'text-white' : 'text-green-500'}`}
                    rows={4}
                  />
                </div>
@@ -249,9 +233,9 @@ export const VigenereCipherPage: React.FC<VigenereCipherPageProps> = ({ onBack, 
                 <VaultButton
                  variant="primary"
                  className="h-20 px-12 text-sm"
-                 onClick={() => navigator.clipboard.writeText(result)}
+                 onClick={() => onNavigateToGame?.()}
                 >
-                  Export Hash
+                   Start Code Cracking
                 </VaultButton>
              </div>
            </div>

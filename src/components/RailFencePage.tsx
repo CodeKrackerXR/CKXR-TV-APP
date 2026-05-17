@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LucideShieldCheck, LucideChevronLeft, LucideChevronRight, LucideInfo, LucideZap } from 'lucide-react';
+import { ASSETS } from '../constants';
+import { VaultButton } from './VaultButton';
+import { ShieldCheck, ChevronLeft, ChevronRight, Info, Zap } from 'lucide-react';
 
-const ASSETS = {
-  FINAL_HERO_BG: 'https://storage.googleapis.com/static.antigravity.dev/ais-dev-ifpbpgsti5iover3ujwykb-20140544900.us-east1.run.app/attachments/1744730515152-inside%20Door.png',
-  LANDING_BANNER: 'https://i.ibb.co/kgXgqkGB/CKXRLogo-Hor-Z.png'
-};
 
 interface RailFencePageProps {
  onBack: () => void;
+ onPlay?: (data: { code: string; rails: number; cols: number }) => void;
  youtuber?: {
    name: string;
    avatar: string;
@@ -16,10 +15,17 @@ interface RailFencePageProps {
  };
 }
 
-export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }) => {
+
+export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber, onPlay }) => {
  const [inputText, setInputText] = useState('CODEKRACKER');
  const [numRails, setNumRails] = useState(3);
  const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
+
+
+ const cleanTextLength = useMemo(() => {
+   return inputText.toUpperCase().replace(/\s/g, '').length;
+ }, [inputText]);
+
 
  // Rail Fence Encoding Logic
  const getEncodedData = (text: string, rails: number) => {
@@ -29,19 +35,23 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
    let rail = 0;
    let direction = 1; // 1 for down, -1 for up
 
+
    for (let i = 0; i < text.length; i++) {
      grid[rail][i] = text[i];
      rail += direction;
      if (rail === rails - 1 || rail === 0) direction *= -1;
    }
 
+
    const result = grid.flat().filter(char => char !== '').join('');
    return { result, grid };
  };
 
+
  // Rail Fence Decoding Logic
  const getDecodedData = (cipher: string, rails: number) => {
    if (rails <= 1) return { result: cipher, grid: [cipher.split('')] };
+
 
    const grid: string[][] = Array.from({ length: rails }, () => new Array(cipher.length).fill(''));
   
@@ -54,6 +64,7 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
      if (rail === rails - 1 || rail === 0) direction *= -1;
    }
 
+
    // Fill the path with actual characters from cipher
    let index = 0;
    for (let r = 0; r < rails; r++) {
@@ -63,6 +74,7 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
        }
      }
    }
+
 
    // Read the zig-zag path
    let result = '';
@@ -74,8 +86,10 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
      if (rail === rails - 1 || rail === 0) direction *= -1;
    }
 
+
    return { result, grid };
  };
+
 
  const { result, grid } = useMemo(() => {
    const cleanText = inputText.toUpperCase().replace(/\s/g, '');
@@ -84,7 +98,9 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
      : getDecodedData(cleanText, numRails);
  }, [inputText, numRails, mode]);
 
+
  const teamName = youtuber?.teamName || (youtuber?.name === "Chris Ramsey" ? "Team Area 52" : `Team ${youtuber?.name.split(' ')[0] || 'Unknown'}`);
+
 
  return (
    <div className="min-h-screen w-full relative bg-black overflow-x-hidden flex flex-col font-sans text-white pb-20">
@@ -99,6 +115,8 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
        }}
      />
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
+     <div className="fixed inset-0 z-0 bg-mesh opacity-10 pointer-events-none" />
+
 
      {/* Header */}
      <div className="relative z-50 w-full flex justify-between border-b border-white/10 bg-black/40 backdrop-blur-sm h-20 md:h-24 items-center px-4 md:px-8">
@@ -106,14 +124,15 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
          onClick={onBack}
          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-colors"
        >
-         <LucideChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-         <span className="font-bold uppercase tracking-widest text-sm">Return to Hub</span>
+         <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+         <span className="font-bold uppercase tracking-widest text-sm text-white">Return to Hub</span>
        </button>
       
-       <img src={ASSETS.LANDING_BANNER} alt="CodeKrackerXR Logo" className="h-10 md:h-14 w-auto object-contain" />
+       <div className="w-24 hidden md:block" />
       
        <div className="w-24 hidden md:block" /> {/* Spacer */}
      </div>
+
 
      <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
        {/* Title Section */}
@@ -135,27 +154,16 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
          </motion.p>
        </div>
 
-       {/* YouTuber context if available */}
-       {youtuber && (
-         <div className="flex items-center justify-center gap-4 mb-12 bg-zinc-900/40 border border-[#D4AF37]/20 p-4 rounded-2xl backdrop-blur-md max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-full border-2 border-[#D4AF37] overflow-hidden">
-              <img src={youtuber.avatar} alt={youtuber.name} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h3 className="font-black text-xl text-[#D4AF37] uppercase tracking-wider italic">{youtuber.name}</h3>
-              <p className="font-bold text-xs text-red-600 uppercase tracking-widest">{teamName}</p>
-            </div>
-         </div>
-       )}
 
        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
          {/* Controls - Left Side */}
          <div className="lg:col-span-4 space-y-6">
            <div className="bg-zinc-900/80 border border-[#D4AF37]/30 p-6 rounded-2xl shadow-2xl backdrop-blur-xl">
              <h2 className="font-black text-xl text-white uppercase tracking-widest mb-6 border-b border-white/10 pb-2 flex items-center gap-2 italic">
-               <LucideZap className="w-5 h-5 text-[#D4AF37]" />
+               <Zap className="w-5 h-5 text-[#D4AF37]" />
                Cipher Config
              </h2>
+
 
              <div className="space-y-6">
                {/* Mode Toggle */}
@@ -177,29 +185,45 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
                  </div>
                </div>
 
-               {/* Rails Control */}
-               <div>
-                 <label className="block text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-black mb-2 flex justify-between">
-                   <span>Number of Rails (Key)</span>
-                   <span className="text-[#D4AF37]">{numRails}</span>
-                 </label>
-                 <input
-                   type="range"
-                   min="2"
-                   max="6"
-                   step="1"
-                   value={numRails}
-                   onChange={(e) => setNumRails(parseInt(e.target.value))}
-                   className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                 />
-                 <div className="flex justify-between text-[10px] text-white/20 font-bold mt-1">
-                   <span>2</span>
-                   <span>3</span>
-                   <span>4</span>
-                   <span>5</span>
-                   <span>6</span>
+
+               {/* Rails & Cols Control */}
+               <div className="space-y-4">
+                 <div className="flex gap-4">
+                   <div className="flex-1 bg-black/60 border-2 border-[#22c55e]/40 rounded-xl p-4 text-center">
+                     <label className="block text-[10px] uppercase tracking-widest text-[#22c55e]/60 font-black mb-1">Rails (Key)</label>
+                     <div className="font-black text-5xl text-[#22c55e] tabular-nums italic">{numRails}</div>
+                   </div>
+                   <div className="flex-1 bg-black/60 border-2 border-[#22c55e]/40 rounded-xl p-4 text-center">
+                     <label className="block text-[10px] uppercase tracking-widest text-[#22c55e]/60 font-black mb-1">Columns</label>
+                     <div className="font-black text-5xl text-[#22c55e] tabular-nums italic">{cleanTextLength}</div>
+                   </div>
+                 </div>
+
+
+                 <div>
+                   <label className="block text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-black mb-2 flex justify-between">
+                     <span>Adjust Number of Rails</span>
+                     <span className="text-[#D4AF37]">{numRails}</span>
+                   </label>
+                   <input
+                     type="range"
+                     min="2"
+                     max="6"
+                     step="1"
+                     value={numRails}
+                     onChange={(e) => setNumRails(parseInt(e.target.value))}
+                     className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                   />
+                   <div className="flex justify-between text-[10px] text-white/20 font-bold mt-1">
+                     <span>2</span>
+                     <span>3</span>
+                     <span>4</span>
+                     <span>5</span>
+                     <span>6</span>
+                   </div>
                  </div>
                </div>
+
 
                {/* Input Text */}
                <div>
@@ -216,10 +240,11 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
              </div>
            </div>
 
+
            {/* Info Box */}
            <div className="bg-blue-900/20 border border-blue-500/30 p-6 rounded-2xl hidden lg:block">
              <h3 className="flex items-center gap-2 font-black uppercase text-sm text-blue-400 mb-3">
-               <LucideInfo className="w-4 h-4" />
+               <Info className="w-4 h-4" />
                How it works
              </h3>
              <p className="text-xs text-white/70 leading-relaxed font-medium capitalize">
@@ -228,13 +253,14 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
            </div>
          </div>
 
+
          {/* Visualization - Right Side */}
          <div className="lg:col-span-8 space-y-6">
            {/* Visualizer Card */}
            <div className="bg-zinc-900/80 border border-[#D4AF37]/30 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden min-h-[400px] flex flex-col">
              <div className="bg-black/60 px-6 py-4 border-b border-white/10 flex justify-between items-center">
                <h2 className="font-black text-xl text-white uppercase tracking-widest flex items-center gap-2 italic">
-                 <LucideShieldCheck className="w-5 h-5 text-blue-500" />
+                 <ShieldCheck className="w-5 h-5 text-blue-500" />
                  Tactical Visualization
                </h2>
                <div className="flex gap-2">
@@ -244,7 +270,8 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
                </div>
              </div>
 
-             <div className="flex-1 p-4 md:p-8 overflow-x-auto">
+
+             <div className="flex-1 p-4 md:p-8 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800">
                <div className="inline-block min-w-full">
                  <div className="grid gap-2" style={{ gridTemplateRows: `repeat(${numRails}, minmax(48px, 1fr))` }}>
                    {grid.map((row, rIdx) => (
@@ -261,6 +288,7 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
                                : 'bg-black/40 text-transparent border-white/5 opacity-20'}`}
                          >
                            {char}
+                           {/* Zig-zag Path Connector (Simplified visual) */}
                            {char !== '' && (
                              <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
                            )}
@@ -272,6 +300,7 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
                </div>
              </div>
 
+
              <div className="bg-black/40 p-6 border-t border-white/10">
                <div className="flex flex-col md:flex-row items-center gap-4">
                  <div className="flex-1 w-full">
@@ -281,26 +310,45 @@ export const RailFencePage: React.FC<RailFencePageProps> = ({ onBack, youtuber }
                    </div>
                  </div>
                 
-                 <button
-                   className="w-full md:w-auto h-16 px-8 bg-[#008044] text-white hover:bg-[#006435] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95"
+                 <VaultButton
+                   variant="primary"
+                   className="w-full md:w-auto h-16 px-8 bg-[#008044] hover:bg-[#006435] border-green-400"
                    onClick={() => {
-                      navigator.clipboard.writeText(result);
+                      if (onPlay) {
+                        onPlay({ code: result, rails: numRails, cols: cleanTextLength });
+                      }
                    }}
                  >
-                   Copy Result
-                 </button>
+                   Try out the Cipher
+                 </VaultButton>
                </div>
              </div>
+           </div>
+
+
+           {/* Mobile Info (Visible only on small screens) */}
+           <div className="bg-blue-900/20 border border-blue-500/30 p-6 rounded-2xl lg:hidden">
+             <h3 className="flex items-center gap-2 font-black uppercase text-sm text-blue-400 mb-3">
+               <Info className="w-4 h-4" />
+               How it works
+             </h3>
+             <p className="text-xs text-white/70 leading-relaxed font-medium">
+               Write message in a zig-zag across multiple rails, then read rail-by-rail.
+             </p>
            </div>
          </div>
        </div>
      </div>
+
 
      <div className="fixed bottom-0 left-0 right-0 py-4 text-center border-t border-white/10 bg-black/80 backdrop-blur-xl z-50">
        <p className="font-bold text-[9px] text-white uppercase tracking-[0.4em] opacity-40">
           &copy; 2026 CODE KRACKER XR | Tactical Transposition Interface
        </p>
      </div>
+    
+     {/* Global Scanline Effect */}
+     <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.05] scanline"></div>
    </div>
  );
 };

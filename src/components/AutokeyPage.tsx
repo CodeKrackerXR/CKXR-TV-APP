@@ -6,6 +6,11 @@ import { LucideShieldCheck, LucideChevronLeft, LucideInfo, LucideZap, LucideGrid
 
 interface AutokeyPageProps {
  onBack: () => void;
+ onNavigateToGame?: () => void;
+ inputText: string;
+ setInputText: (val: string) => void;
+ keyword: string;
+ setKeyword: (val: string) => void;
  youtuber?: {
    name: string;
    avatar: string;
@@ -15,14 +20,12 @@ interface AutokeyPageProps {
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) => {
- const [inputText, setInputText] = useState('VAULT');
- const [key, setKey] = useState('CODE');
+export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, onNavigateToGame, inputText, setInputText, keyword: initialKey, setKeyword, youtuber }) => {
  const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
 
  const { result, fullKey, steps } = useMemo(() => {
    const cleanText = inputText.toUpperCase().replace(/[^A-Z]/g, '');
-   const cleanPrimer = key.toUpperCase().replace(/[^A-Z]/g, '');
+   const cleanPrimer = initialKey.toUpperCase().replace(/[^A-Z]/g, '');
    if (!cleanText || !cleanPrimer) return { result: '', fullKey: '', steps: [] };
 
    let res = '';
@@ -70,7 +73,7 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
    }
 
    return { result: res, fullKey: currentFullKey, steps: currentSteps };
- }, [inputText, key, mode]);
+ }, [inputText, initialKey, mode]);
 
  const teamName = youtuber?.teamName || (youtuber?.name === "Chris Ramsey" ? "Team Area 52" : `Team ${youtuber?.name.split(' ')[0] || 'Unknown'}`);
 
@@ -86,7 +89,7 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
      />
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
 
-     {/* Header */}
+      {/* Header */}
      <div className="relative z-50 w-full flex justify-between border-b border-white/10 bg-black/40 backdrop-blur-sm h-20 md:h-24 items-center px-4 md:px-8">
        <button
          onClick={onBack}
@@ -95,14 +98,6 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
          <LucideChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
          <span className="font-bold uppercase tracking-widest text-sm">Return to Hub</span>
        </button>
-      
-       <div className="text-white flex items-center gap-1">
-         <span className="text-xl font-black uppercase tracking-tighter">The Code</span>
-         <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] flex items-center justify-center p-1 overflow-hidden">
-           <img src="https://i.ibb.co/67vY2yYj/Gold-X-Green-R.png" alt="XR Logo" className="w-full h-full object-contain" />
-         </div>
-         <span className="text-xl font-black uppercase tracking-tighter">Challenge</span>
-       </div>
       
        <div className="w-24 hidden md:block" />
      </div>
@@ -125,18 +120,6 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
            Dynamic Key Extraction Interface
          </motion.p>
        </div>
-
-       {youtuber && (
-         <div className="flex items-center justify-center gap-4 mb-12 bg-zinc-900/40 border border-[#D4AF37]/20 p-4 rounded-2xl backdrop-blur-md max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-full border-2 border-[#D4AF37] overflow-hidden">
-              <img src={youtuber.avatar} alt={youtuber.name} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h3 className="font-black text-xl text-[#D4AF37] uppercase tracking-wider italic">{youtuber.name}</h3>
-              <p className="font-bold text-xs text-red-600 uppercase tracking-widest">{teamName}</p>
-            </div>
-         </div>
-       )}
 
        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
          {/* Controls */}
@@ -170,9 +153,9 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
                   <label className="block text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-black mb-1">Primer (Keyword)</label>
                   <input
                    type="text"
-                   value={key}
-                   onChange={(e) => setKey(e.target.value.toUpperCase())}
-                   className="w-full bg-black/60 border border-[#D4AF37]/20 rounded-lg p-3 font-bold text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] tracking-widest"
+                   value={initialKey}
+                   onChange={(e) => setKeyword(e.target.value.substring(0, 15).toUpperCase())}
+                   className={`w-full bg-black/60 border border-[#D4AF37]/20 rounded-lg p-3 font-bold focus:outline-none focus:border-[#D4AF37] tracking-widest transition-colors ${initialKey === 'CODE' ? 'text-white' : 'text-green-500'}`}
                    placeholder="Enter primer..."
                  />
                </div>
@@ -182,7 +165,7 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
                  <textarea
                    value={inputText}
                    onChange={(e) => setInputText(e.target.value.toUpperCase())}
-                   className="w-full bg-black/60 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] resize-none"
+                   className={`w-full bg-black/60 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg focus:outline-none focus:border-[#D4AF37] resize-none transition-colors ${inputText === 'VAULT' ? 'text-white' : 'text-green-500'}`}
                    rows={4}
                  />
                </div>
@@ -213,14 +196,14 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
                 <div className="flex flex-col gap-2">
                    <div className="flex bg-black/40 rounded-xl border border-white/5 overflow-hidden font-black text-xs md:text-sm">
                       <div className="bg-[#D4AF37]/20 text-[#D4AF37] px-4 py-3 border-r border-white/5 uppercase italic">Primer</div>
-                      <div className="flex-1 px-4 py-3 text-[#D4AF37] tracking-widest uppercase font-mono">{key || '---'}</div>
+                      <div className="flex-1 px-4 py-3 text-[#D4AF37] tracking-widest uppercase font-mono">{initialKey || '---'}</div>
                    </div>
                    <LucideArrowRight className="w-4 h-4 text-white/20 mx-auto rotate-90" />
                    <div className="flex bg-black/60 rounded-xl border border-[#D4AF37]/20 overflow-hidden font-black text-sm md:text-xl">
                       <div className="bg-[#D4AF37] text-black px-4 md:px-6 py-4 uppercase flex items-center italic">Full Feed</div>
                       <div className="flex-1 px-4 md:px-6 py-4 text-[#D4AF37] tracking-widest break-all font-mono uppercase">
                        {fullKey.split('').map((char, i) => (
-                          <span key={i} className={i < key.length ? 'text-[#D4AF37]' : 'text-blue-400'}>{char}</span>
+                          <span key={i} className={i < initialKey.length ? 'text-[#D4AF37]' : 'text-blue-400'}>{char}</span>
                        ))}
                       </div>
                    </div>
@@ -235,13 +218,14 @@ export const AutokeyPage: React.FC<AutokeyPageProps> = ({ onBack, youtuber }) =>
                          {result || '--- ---'}
                        </div>
                      </div>
-                     <VaultButton
-                       variant="primary"
-                       className="h-20 px-12"
-                       onClick={() => navigator.clipboard.writeText(result)}
-                     >
-                       Deep Sync
-                     </VaultButton>
+                     {onNavigateToGame && (
+                        <button
+                          className="w-full md:w-auto h-20 px-10 bg-green-600 text-white hover:bg-green-500 font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95"
+                          onClick={onNavigateToGame}
+                        >
+                          Play
+                        </button>
+                      )}
                    </div>
                 </div>
              </div>

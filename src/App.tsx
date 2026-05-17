@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TVContainer } from '@/src/components/TVContainer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,19 +7,30 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { motion, AnimatePresence, animate } from 'motion/react';
 import { User, Plus, LogIn, ArrowRight, Tv, Pencil, Play, PlayCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CaesarCipherWheel } from './components/CaesarCipherWheel';
+import { CaesarCipherPage } from './components/CaesarCipherPage';
+import { CaesarGamePage } from './components/CaesarGamePage';
 import { CurrencyAuthenticator } from './components/CurrencyAuthenticator';
 import { RailFencePage } from './components/RailFencePage';
+import { RailFenceGamePage } from './components/RailFenceGamePage';
 import { VigenereCipherPage } from './components/VigenereCipherPage';
-import { BeaufortPage } from './components/BeaufortPage';
+import { VigenereGamePage } from './components/VigenereGamePage';
+import { EnigmaPage } from './components/EnigmaPage';
+import { EnigmaGamePage } from './components/EnigmaGamePage';
+import { runGearedEnigma } from './lib/enigmaUtils';
 import { AutokeyPage } from './components/AutokeyPage';
+import { AutokeyGamePage } from './components/AutokeyGamePage';
 import { TranspositionPage } from './components/TranspositionPage';
 import { PlayfairPage } from './components/PlayfairPage';
+import { TranspositionGamePage } from './components/TranspositionGamePage';
+import { PlayfairGamePage } from './components/PlayfairGamePage';
 import { FourSquarePage } from './components/FourSquarePage';
+import { FourSquareGamePage } from './components/FourSquareGamePage';
 import { NihilistPage } from './components/NihilistPage';
+import { NihilistGamePage } from './components/NihilistGamePage';
 import { BifidPage } from './components/BifidPage';
+import { BifidGamePage } from './components/BifidGamePage';
 
-type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'RAIL_FENCE' | 'VIGENERE' | 'BEAUFORT' | 'AUTOKEY' | 'TRANSPOSITION' | 'PLAYFAIR' | 'FOUR_SQUARE' | 'NIHILIST' | 'BIFID' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS';
+type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ENIGMA' | 'ENIGMA_GAME' | 'AUTOKEY' | 'AUTOKEY_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME';
 
 interface Profile {
   id: string;
@@ -172,7 +183,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     jackpot: "$2,000,000",
     targetItem: "Impact driver",
     targetItemImage: "https://i.ibb.co/HTzpQjZK/Imapact-Driver.jpg",
-    cipherName: "Beaufort Cipher",
+    cipherName: "Enigma Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=PzjQH7aJNhs",
     sponsor: {
       logo: "https://i.ibb.co/FjsDCGM/Pringles-logo.jpg",
@@ -429,6 +440,12 @@ export default function App() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [expandedStatsIds, setExpandedStatsIds] = useState<string[]>([]);
+  const [episodePerformance, setEpisodePerformance] = useState([
+    { keyword: "data", gameCode: "smart phone", time: "2:43:58", idCode: "L", seatCode: "Z" },
+    { keyword: "chip", gameCode: "tasty", time: "3:13:24", idCode: "L12", seatCode: "W" },
+    { keyword: "Blue", gameCode: "pending", time: "pending", idCode: "F134", seatCode: "pending" },
+    ...Array(7).fill({ keyword: "---", gameCode: "****-****", time: "--:--", idCode: "---", seatCode: "---" })
+  ]);
   const toggleStats = (id: string) => {
     setExpandedStatsIds(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -494,7 +511,8 @@ export default function App() {
   const [crackedOutput, setCrackedOutput] = useState("");
   const [shift, setShift] = useState(0);
   const [currentRotation, setCurrentRotation] = useState(0);
-  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [caesarInitialCode, setCaesarInitialCode] = useState("CODEKRACKER");
+  const [caesarTargetShift, setCaesarTargetShift] = useState(3);
 
   // Jackpot Animation Logic
   useEffect(() => {
@@ -526,6 +544,316 @@ export default function App() {
   const skinTones = ['edb98a', 'f8d25c', 'fd9841', 'ffdbac', 'd08b5b', 'ae5d29', '614335'];
   const hairColors = ['2c1b18', '4a312c', '77311d', 'b58143', 'd6b070', 'e8e1e1', 'f59797'];
   const tops = ['shortHair', 'longHair', 'bob', 'curly', 'shaved', 'frizzle', 'dreads'];
+
+  // Rail Fence State
+  const [railFenceInitialCode, setRailFenceInitialCode] = useState("CODEKRACKER");
+  const [railFenceRails, setRailFenceRails] = useState(3);
+  const [railFenceCols, setRailFenceCols] = useState(11);
+
+  // Vigenere State
+  const [vigenereInputText, setVigenereInputText] = useState("VAULT");
+  const [vigenereKey, setVigenereKey] = useState("CODE");
+
+  const vigenereEncoded = useMemo(() => {
+    const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const cleanText = vigenereInputText.toUpperCase().replace(/[^A-Z]/g, '');
+    const cleanKey = vigenereKey.toUpperCase().replace(/[^A-Z]/g, '');
+    if (!cleanText || !cleanKey) return "";
+    let res = "";
+    for (let i = 0; i < cleanText.length; i++) {
+      const char = cleanText[i];
+      const k = cleanKey[i % cleanKey.length];
+      const charIdx = ALPHABET.indexOf(char);
+      const kIdx = ALPHABET.indexOf(k);
+      res += ALPHABET[(charIdx + kIdx) % 26];
+    }
+    return res;
+  }, [vigenereInputText, vigenereKey]);
+
+  // Autokey State
+  const [autokeyInputText, setAutokeyInputText] = useState("VAULT");
+  const [autokeyKey, setAutokeyKey] = useState("CODE");
+
+  const autokeyEncoded = useMemo(() => {
+    const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const cleanText = autokeyInputText.toUpperCase().replace(/[^A-Z]/g, '');
+    const cleanKey = autokeyKey.toUpperCase().replace(/[^A-Z]/g, '');
+    if (!cleanText || !cleanKey) return "";
+
+    // Autokey logic: Key = primer + text
+    const fullKey = (cleanKey + cleanText).substring(0, cleanText.length);
+    let res = "";
+    for (let i = 0; i < cleanText.length; i++) {
+        const charIdx = ALPHABET.indexOf(cleanText[i]);
+        const keyIdx = ALPHABET.indexOf(fullKey[i]);
+        res += ALPHABET[(charIdx + keyIdx) % 26];
+    }
+    return res;
+  }, [autokeyInputText, autokeyKey]);
+
+  // Transposition State
+  const [transpositionInputText, setTranspositionInputText] = useState("VAULT");
+  const [transpositionKey, setTranspositionKey] = useState("CODE");
+
+  const transpositionEncoded = useMemo(() => {
+    if (!transpositionKey) return transpositionInputText;
+    
+    const cleanText = transpositionInputText.toUpperCase().replace(/\s/g, '');
+    const cleanKey = transpositionKey.toUpperCase().replace(/\s/g, '');
+    const numCols = cleanKey.length;
+    
+    const sortedKey = cleanKey.split('').map((char, originalIndex) => ({ char, originalIndex }))
+      .sort((a, b) => a.char.localeCompare(b.char));
+    
+    const numRows = Math.ceil(cleanText.length / numCols);
+    const grid: string[][] = Array.from({ length: numRows }, () => new Array(numCols).fill(''));
+    
+    for (let i = 0; i < cleanText.length; i++) {
+      const r = Math.floor(i / numCols);
+      const c = i % numCols;
+      grid[r][c] = cleanText[i];
+    }
+
+    // Pad with X
+    for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+            if (grid[r][c] === '') grid[r][c] = 'X';
+        }
+    }
+
+    let result = '';
+    const readingOrder = sortedKey.map(item => item.originalIndex);
+    
+    readingOrder.forEach(colIdx => {
+      for (let r = 0; r < numRows; r++) {
+        result += grid[r][colIdx];
+      }
+    });
+
+    return result;
+  }, [transpositionInputText, transpositionKey]);
+
+  // Playfair State
+  const [playfairInputText, setPlayfairInputText] = useState("PLAYFAIR");
+  const [playfairKey, setPlayfairKey] = useState("CODE");
+
+  const playfairEncoded = useMemo(() => {
+    const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+    const cleanKey = playfairKey.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+    const cleanText = playfairInputText.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+    if (!cleanText || !cleanKey) return "";
+
+    const seen = new Set<string>();
+    const square: string[] = [];
+    for (const char of cleanKey) {
+      if (!seen.has(char)) {
+        seen.add(char);
+        square.push(char);
+      }
+    }
+    for (const char of ALPHABET_NO_J) {
+      if (!seen.has(char)) {
+        seen.add(char);
+        square.push(char);
+      }
+    }
+
+    const getPos = (c: string) => {
+      const idx = square.indexOf(c);
+      return { r: Math.floor(idx / 5), c: idx % 5 };
+    };
+    const getCharFromSquare = (r: number, c: number) => square[((r + 5) % 5) * 5 + ((c + 5) % 5)];
+
+    let preparedText = '';
+    let i = 0;
+    while (i < cleanText.length) {
+      const a = cleanText[i];
+      const b = (i + 1 < cleanText.length) ? cleanText[i + 1] : '';
+      if (a === b) { preparedText += a + 'X'; i++; }
+      else if (b === '') { preparedText += a + 'X'; i += 2; }
+      else { preparedText += a + b; i += 2; }
+    }
+
+    let res = "";
+    for (let j = 0; j < preparedText.length; j += 2) {
+      const posA = getPos(preparedText[j]);
+      const posB = getPos(preparedText[j+1]);
+      if (posA.r === posB.r) {
+        res += getCharFromSquare(posA.r, posA.c + 1) + getCharFromSquare(posB.r, posB.c + 1);
+      } else if (posA.c === posB.c) {
+        res += getCharFromSquare(posA.r + 1, posA.c) + getCharFromSquare(posB.r + 1, posB.c);
+      } else {
+        res += getCharFromSquare(posA.r, posB.c) + getCharFromSquare(posB.r, posA.c);
+      }
+    }
+    return res;
+  }, [playfairInputText, playfairKey]);
+
+  // Four-Square State
+  const [fourSquareInputText, setFourSquareInputText] = useState("HELPME");
+  const [fourSquareKey1, setFourSquareKey1] = useState("VAULT");
+  const [fourSquareKey2, setFourSquareKey2] = useState("SECRET");
+
+  // Nihilist State
+  const [nihilistInputText, setNihilistInputText] = useState("DUDE");
+  const [nihilistGridKey, setNihilistGridKey] = useState("PERFECT");
+  const [nihilistAddKey, setNihilistAddKey] = useState("SHOT");
+
+  // Enigma State
+  const [enigmaInputText, setEnigmaInputText] = useState("AGENT");
+  const [enigmaRotorPos, setEnigmaRotorPos] = useState("A-A-A");
+
+  // Bifid State
+  const [bifidInputText, setBifidInputText] = useState("JSTU");
+  const [bifidKey, setBifidKey] = useState("VAULT");
+
+  const bifidEncoded = useMemo(() => {
+    const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+    const generateSquare = (key: string) => {
+      const cleanKey = key.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+      const seen = new Set<string>();
+      const square: string[] = [];
+      for (const char of cleanKey) {
+        if (!seen.has(char)) {
+          seen.add(char);
+          square.push(char);
+        }
+      }
+      for (const char of ALPHABET_NO_J) {
+        if (!seen.has(char)) {
+          seen.add(char);
+          square.push(char);
+        }
+      }
+      return square;
+    };
+
+    const square = generateSquare(bifidKey);
+    const getCoords = (char: string) => {
+      const c = char.toUpperCase().replace(/J/g, 'I');
+      const idx = square.indexOf(c);
+      if (idx === -1) return null;
+      return { r: Math.floor(idx / 5) + 1, c: (idx % 5) + 1 };
+    };
+    const getChar = (r: number, c: number) => {
+      const idx = (r - 1) * 5 + (c - 1);
+      return square[idx] || '?';
+    };
+
+    const cleanText = bifidInputText.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+    if (!cleanText) return "";
+
+    const rows: number[] = [];
+    const cols: number[] = [];
+    for (const char of cleanText) {
+      const coords = getCoords(char);
+      if (coords) {
+        rows.push(coords.r);
+        cols.push(coords.c);
+      }
+    }
+
+    const combined = [...rows, ...cols];
+    let res = "";
+    for (let i = 0; i < combined.length; i += 2) {
+      const r = combined[i];
+      const c = combined[i + 1];
+      res += getChar(r, c);
+    }
+    return res;
+  }, [bifidInputText, bifidKey]);
+
+  const nihilistEncoded = useMemo(() => {
+    const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+    const generateSquare = (key: string) => {
+      const cleanKey = key.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+      const seen = new Set<string>();
+      const square: string[] = [];
+      for (const char of cleanKey) {
+        if (!seen.has(char)) {
+          seen.add(char);
+          square.push(char);
+        }
+      }
+      for (const char of ALPHABET_NO_J) {
+        if (!seen.has(char)) {
+          seen.add(char);
+          square.push(char);
+        }
+      }
+      return square;
+    };
+
+    const square = generateSquare(nihilistGridKey);
+    const getCoords = (char: string) => {
+      const c = char.toUpperCase().replace(/J/g, 'I');
+      const idx = square.indexOf(c);
+      if (idx === -1) return null;
+      const r = Math.floor(idx / 5) + 1;
+      const col = (idx % 5) + 1;
+      return parseInt(`${r}${col}`);
+    };
+
+    const cleanText = nihilistInputText.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+    const cleanAddKey = nihilistAddKey.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+    if (!cleanAddKey || !cleanText) return "";
+
+    const keyCoords = cleanAddKey.split('').map(c => getCoords(c)).filter(n => n !== null) as number[];
+    let res = "";
+    cleanText.split('').forEach((char, i) => {
+      const textCoord = getCoords(char);
+      if (textCoord === null) return;
+      const addK = keyCoords[i % keyCoords.length];
+      res += (textCoord + addK) + " ";
+    });
+
+    return res.trim();
+  }, [nihilistInputText, nihilistGridKey, nihilistAddKey]);
+
+  const fourSquareEncoded = useMemo(() => {
+    const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+    const generateSquare = (key: string) => {
+      const cleanKey = key.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+      const seen = new Set<string>();
+      const square: string[] = [];
+      for (const char of cleanKey) {
+        if (!seen.has(char)) {
+          seen.add(char);
+          square.push(char);
+        }
+      }
+      for (const char of ALPHABET_NO_J) {
+        if (!seen.has(char)) {
+          seen.add(char);
+          square.push(char);
+        }
+      }
+      return square;
+    };
+
+    const sqTL = ALPHABET_NO_J.split('');
+    const sqBR = ALPHABET_NO_J.split('');
+    const sqTR = generateSquare(fourSquareKey1);
+    const sqBL = generateSquare(fourSquareKey2);
+
+    const cleanText = fourSquareInputText.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+    let textToProcess = cleanText;
+    if (textToProcess.length % 2 !== 0) textToProcess += 'X';
+
+    let res = "";
+    for (let i = 0; i < textToProcess.length; i += 2) {
+      const a = textToProcess[i];
+      const b = textToProcess[i + 1];
+      const idxA = sqTL.indexOf(a);
+      const idxB = sqBR.indexOf(b);
+      const rA = Math.floor(idxA / 5);
+      const cA = idxA % 5;
+      const rB = Math.floor(idxB / 5);
+      const cB = idxB % 5;
+      res += sqTR[rA * 5 + cB] + sqBL[rB * 5 + cA];
+    }
+    return res;
+  }, [fourSquareInputText, fourSquareKey1, fourSquareKey2]);
 
   // Simple D-pad navigation simulation for the demo
   useEffect(() => {
@@ -561,8 +889,8 @@ export default function App() {
         if (e.key === 'Backspace') {
           setCurrentScreen(selectedYoutuberIndex !== null ? 'EPISODE_DETAIL' : 'HOME');
         }
-      } else if (currentScreen === 'CAESAR_WHEEL') {
-        if (e.key === 'Backspace') setCurrentScreen('HOME');
+      } else if (currentScreen === 'CAESAR_WHEEL' || currentScreen === 'CAESAR_ENCODE' || currentScreen === 'CAESAR_GAME' || currentScreen === 'VIGENERE_GAME') {
+        if (e.key === 'Backspace') setCurrentScreen('EPISODE_DETAIL');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -672,8 +1000,8 @@ export default function App() {
                   setCurrentScreen('RAIL_FENCE');
                 } else if (currentYoutuber.cipherName === "Vigenère Cipher") {
                   setCurrentScreen('VIGENERE');
-                } else if (currentYoutuber.cipherName === "Beaufort Cipher") {
-                  setCurrentScreen('BEAUFORT');
+                } else if (currentYoutuber.cipherName === "Enigma Cipher") {
+                  setCurrentScreen('ENIGMA');
                 } else if (currentYoutuber.cipherName === "Autokey Cipher") {
                   setCurrentScreen('AUTOKEY');
                 } else if (currentYoutuber.cipherName === "Transposition Cipher") {
@@ -686,13 +1014,115 @@ export default function App() {
                   setCurrentScreen('NIHILIST');
                 } else if (currentYoutuber.cipherName === "Bifid Cipher") {
                   setCurrentScreen('BIFID');
+                } else if (currentYoutuber.cipherName === "Caesar Cipher") {
+                  setCurrentScreen('CAESAR_ENCODE');
                 } else {
                   setCurrentScreen('CAESAR_WHEEL');
                 }
               }}
             >
-              Try out the Cipher
+              Setup the Cipher
             </Button>
+
+              {currentYoutuber.cipherName === "Caesar Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('CAESAR_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Rail Fence Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('RAIL_FENCE_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Vigenère Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('VIGENERE_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Enigma Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('ENIGMA_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Autokey Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('AUTOKEY_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Transposition Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('TRANSPOSITION_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Playfair Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('PLAYFAIR_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Four-Square Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('FOUR_SQUARE_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Nihilist Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('NIHILIST_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Bifid Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('BIFID_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
           </div>
 
           {/* Item Section */}
@@ -748,56 +1178,292 @@ export default function App() {
         return (
           <FourSquarePage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('FOUR_SQUARE_GAME')}
+            inputText={fourSquareInputText}
+            setInputText={setFourSquareInputText}
+            key1={fourSquareKey1}
+            setKey1={setFourSquareKey1}
+            key2={fourSquareKey2}
+            setKey2={setFourSquareKey2}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'FOUR_SQUARE_GAME':
+        return (
+          <FourSquareGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={fourSquareEncoded}
+            initialKey1={fourSquareKey1}
+            initialKey2={fourSquareKey2}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'BIFID':
         return (
           <BifidPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('BIFID_GAME')}
+            inputText={bifidInputText}
+            setInputText={setBifidInputText}
+            cipherKey={bifidKey}
+            setCipherKey={setBifidKey}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'BIFID_GAME':
+        return (
+          <BifidGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={bifidEncoded}
+            initialKey={bifidKey}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'NIHILIST':
         return (
           <NihilistPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('NIHILIST_GAME')}
+            inputText={nihilistInputText}
+            setInputText={setNihilistInputText}
+            gridKey={nihilistGridKey}
+            setGridKey={setNihilistGridKey}
+            addKey={nihilistAddKey}
+            setAddKey={setNihilistAddKey}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'NIHILIST_GAME':
+        return (
+          <NihilistGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={nihilistEncoded}
+            initialGridKey={nihilistGridKey}
+            initialAddKey={nihilistAddKey}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'PLAYFAIR':
         return (
           <PlayfairPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('PLAYFAIR_GAME')}
+            inputText={playfairInputText}
+            setInputText={setPlayfairInputText}
+            keyword={playfairKey}
+            setKeyword={setPlayfairKey}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'PLAYFAIR_GAME':
+        return (
+          <PlayfairGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={playfairEncoded}
+            initialKey={playfairKey}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'TRANSPOSITION':
         return (
           <TranspositionPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('TRANSPOSITION_GAME')}
+            inputText={transpositionInputText}
+            setInputText={setTranspositionInputText}
+            keyword={transpositionKey}
+            setKeyword={setTranspositionKey}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'TRANSPOSITION_GAME':
+        return (
+          <TranspositionGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={transpositionEncoded}
+            targetText={transpositionInputText}
+            initialKey={transpositionKey}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'AUTOKEY':
         return (
           <AutokeyPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('AUTOKEY_GAME')}
+            inputText={autokeyInputText}
+            setInputText={setAutokeyInputText}
+            keyword={autokeyKey}
+            setKeyword={setAutokeyKey}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
           />
         );
-      case 'BEAUFORT':
+      case 'AUTOKEY_GAME':
         return (
-          <BeaufortPage 
-            onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+          <AutokeyGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={autokeyEncoded}
+            targetText={autokeyInputText}
+            initialKey={autokeyKey}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
+          />
+        );
+      case 'ENIGMA':
+        return (
+          <EnigmaPage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onPlay={() => setCurrentScreen('ENIGMA_GAME')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'ENIGMA_GAME':
+        return (
+          <EnigmaGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            initialCode={runGearedEnigma(enigmaInputText, enigmaRotorPos, 'ENCODE').result}
+            initialKey={enigmaRotorPos}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'VIGENERE':
         return (
           <VigenereCipherPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
+            onNavigateToGame={() => setCurrentScreen('VIGENERE_GAME')}
+            inputText={vigenereInputText}
+            setInputText={setVigenereInputText}
+            keyword={vigenereKey}
+            setKeyword={setVigenereKey}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+          />
+        );
+      case 'VIGENERE_GAME':
+        return (
+          <VigenereGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={vigenereEncoded}
+            targetText={vigenereInputText}
+            initialKey={vigenereKey}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'RAIL_FENCE':
@@ -805,6 +1471,38 @@ export default function App() {
           <RailFencePage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            onPlay={(data) => {
+              setRailFenceInitialCode(data.code);
+              setRailFenceRails(data.rails);
+              setRailFenceCols(data.cols);
+              setCurrentScreen('RAIL_FENCE_GAME');
+            }}
+          />
+        );
+      case 'RAIL_FENCE_GAME':
+        return (
+          <RailFenceGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            initialCode={railFenceInitialCode}
+            targetRails={railFenceRails}
+            targetCols={railFenceCols}
+            creatorDocId="MasterCreatorFolder"
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'LEGAL':
@@ -1451,12 +2149,6 @@ export default function App() {
         );
 
       case 'PLAYERS_INFO':
-        const EPISODE_PERFORMANCE = [
-          { keyword: "data", gameCode: "smart phone", time: "2:43:58", idCode: "L", seatCode: "Z" },
-          { keyword: "chip", gameCode: "tasty", time: "3:13:24", idCode: "L12", seatCode: "W" },
-          { keyword: "Blue", gameCode: "pending", time: "pending", idCode: "F134", seatCode: "pending" },
-        ];
-
         return (
           <div className="flex-1 flex flex-col items-center justify-start py-10 px-6 space-y-12 overflow-y-auto custom-scrollbar h-full">
             {/* Header: User Identification */}
@@ -1494,7 +2186,7 @@ export default function App() {
                 {YOUTUBE_DATA.map((youtuber, i) => {
                   const billLevel = DOLLAR_BILL_LEVELS[i];
                   const sponsor = youtuber.sponsor;
-                  const performance = EPISODE_PERFORMANCE[i];
+                  const performance = episodePerformance[i];
                   
                   // Border and Status logic
                   let borderClass = 'border-zinc-800 opacity-40';
@@ -2372,23 +3064,92 @@ export default function App() {
 
       case 'CAESAR_WHEEL':
         return (
-          <CaesarCipherWheel 
+          <CaesarGamePage 
             onBack={() => setCurrentScreen('HOME')}
+            onReturnToEncoder={() => setCurrentScreen('CAESAR_ENCODE')}
             onNavigateToTheHunt={() => setCurrentScreen('HOME')}
             onNavigateToDigitalCoin={() => setCurrentScreen('HOME')}
+            onPostResults={(data) => {
+              setEpisodePerformance(prev => {
+                const next = [...prev];
+                // Since this is generic, we don't have selectedYoutuberIndex reliably here?
+                // Actually if it's CAESAR_WHEEL it's usually from HOME?
+                // Let's check if selectedYoutuberIndex is used.
+                if (selectedYoutuberIndex !== null) {
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                }
+                return next;
+              });
+              setCurrentScreen('PLAYERS_INFO');
+            }}
+            initialCode={caesarInitialCode || "CIPHER"}
             crackedOutput={crackedOutput}
             setCrackedOutput={setCrackedOutput}
+            mappingLetter="A"
             shift={shift}
             setShift={setShift}
-            currentRotation={currentRotation}
-            setCurrentRotation={setCurrentRotation}
-            isTimerActiveExternal={isTimerActive}
-            setIsTimerActiveExternal={setIsTimerActive}
+            targetShift={caesarTargetShift}
+            rotation={currentRotation}
+            setRotation={setCurrentRotation}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
-            onOpenVideo={(url) => {
-              setActiveVideoUrl(url);
-              setCurrentScreen('VIDEO_PLAYER');
+            huntAnswers={["42"]}
+          />
+        );
+      case 'CAESAR_ENCODE':
+        return (
+          <CaesarCipherPage 
+            onBack={() => setCurrentScreen('EPISODE_DETAIL')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            onPlay={(data) => {
+              setCaesarInitialCode(data.code);
+              setCaesarTargetShift(data.shift);
+              setCurrentScreen('CAESAR_GAME');
             }}
+          />
+        );
+      case 'CAESAR_GAME':
+        return (
+          <CaesarGamePage 
+            onBack={() => setCurrentScreen('EPISODE_DETAIL')}
+            onReturnToEncoder={() => setCurrentScreen('CAESAR_ENCODE')}
+            onNavigateToTheHunt={() => setCurrentScreen('VIDEO_PLAYER')}
+            onNavigateToDigitalCoin={() => setCurrentScreen('ONE_DOLLAR_BILL')}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    // The design says to post Sponsor key. 
+                    // Looking at the performance object, it doesn't have a place for Sponsor key specifically
+                    // but I can put it in keyword if the user wants?
+                    // "Post the Sponsor key that was used to crack the code. Example 'A=F'"
+                    // Let's assume keyword is for sponsor key or we add it.
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
+            initialCode={caesarInitialCode}
+            crackedOutput={crackedOutput}
+            setCrackedOutput={setCrackedOutput}
+            mappingLetter="A"
+            shift={shift}
+            setShift={setShift}
+            targetShift={caesarTargetShift}
+            rotation={currentRotation}
+            setRotation={setCurrentRotation}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            huntAnswers={["42"]}
           />
         );
     }

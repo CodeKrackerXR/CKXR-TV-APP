@@ -1,22 +1,34 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { ASSETS } from '../constants';
-import { LucideShieldCheck, LucideChevronLeft, LucideInfo, LucideZap, LucideGrid3X3, LucideArrowRightLeft } from 'lucide-react';
+import { LucideChevronLeft, LucideInfo, LucideZap, LucideGrid3X3, LucideArrowRightLeft } from 'lucide-react';
 
 interface PlayfairPageProps {
  onBack: () => void;
+ onPlay?: (data: { code: string; key: string }) => void;
+ onNavigateToGame?: () => void;
+ inputText: string;
+ setInputText: (val: string) => void;
+ keyword: string;
+ setKeyword: (val: string) => void;
  youtuber?: {
    name: string;
    avatar: string;
-   teamName?: string;
  };
 }
 
 const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
 
-export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) => {
- const [inputText, setInputText] = useState('PLAYFAIR');
- const [key, setKey] = useState('CODE');
+export const PlayfairPage: React.FC<PlayfairPageProps> = ({ 
+  onBack, 
+  onPlay, 
+  onNavigateToGame,
+  inputText,
+  setInputText,
+  keyword: key,
+  setKeyword: setKey,
+  youtuber 
+}) => {
  const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
 
  const square = useMemo(() => {
@@ -109,8 +121,6 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
    return { result: resText, steps: currentSteps };
  }, [inputText, square, mode]);
 
- const teamName = youtuber?.teamName || (youtuber?.name === "Chris Ramsey" ? "Team Area 52" : `Team ${youtuber?.name.split(' ')[0] || 'Unknown'}`);
-
  return (
    <div className="min-h-screen w-full relative bg-black overflow-x-hidden flex flex-col font-sans text-white pb-20">
      <div
@@ -122,6 +132,7 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
        }}
      />
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
+     <div className="fixed inset-0 z-0 bg-mesh opacity-10 pointer-events-none" />
 
      {/* Header */}
      <div className="relative z-50 w-full flex justify-between border-b border-white/10 bg-black/40 backdrop-blur-sm h-20 md:h-24 items-center px-4 md:px-8">
@@ -130,16 +141,8 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-colors"
        >
          <LucideChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-         <span className="font-bold uppercase tracking-widest text-sm">Return to Hub</span>
+         <span className="font-bold uppercase tracking-widest text-sm text-white">Return to Hub</span>
        </button>
-      
-       <div className="text-white flex items-center gap-1">
-         <span className="text-xl font-black uppercase tracking-tighter">The Code</span>
-         <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] flex items-center justify-center p-1 overflow-hidden">
-           <img src="https://i.ibb.co/67vY2yYj/Gold-X-Green-R.png" alt="XR Logo" className="w-full h-full object-contain" />
-         </div>
-         <span className="text-xl font-black uppercase tracking-tighter">Challenge</span>
-       </div>
       
        <div className="w-24 hidden md:block" />
      </div>
@@ -153,27 +156,7 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
          >
            Playfair Cipher
          </motion.h1>
-         <motion.p
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.2 }}
-           className="text-zinc-500 font-medium uppercase tracking-[0.3em] text-xs md:text-sm"
-         >
-           Bigram Substitution Protocol
-         </motion.p>
        </div>
-
-       {youtuber && (
-         <div className="flex items-center justify-center gap-4 mb-12 bg-zinc-900/40 border border-[#D4AF37]/20 p-4 rounded-2xl backdrop-blur-md max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-full border-2 border-[#D4AF37] overflow-hidden">
-              <img src={youtuber.avatar} alt={youtuber.name} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h3 className="font-black text-xl text-[#D4AF37] uppercase tracking-wider italic">{youtuber.name}</h3>
-              <p className="font-bold text-xs text-red-600 uppercase tracking-widest">{teamName}</p>
-            </div>
-         </div>
-       )}
 
        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
          {/* Controls */}
@@ -209,7 +192,7 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
                    type="text"
                    value={key}
                    onChange={(e) => setKey(e.target.value.toUpperCase())}
-                   className="w-full bg-black/60 border border-[#D4AF37]/20 rounded-lg p-3 font-bold text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] font-mono tracking-widest uppercase"
+                   className={`w-full bg-black/60 border border-[#D4AF37]/20 rounded-lg p-3 font-bold focus:outline-none focus:border-[#D4AF37] font-mono tracking-widest transition-colors ${key === 'CODE' ? 'text-white' : 'text-green-500'}`}
                    placeholder="Enter keyword..."
                  />
                </div>
@@ -219,7 +202,7 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
                  <textarea
                    value={inputText}
                    onChange={(e) => setInputText(e.target.value.toUpperCase())}
-                   className="w-full bg-black/60 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] resize-none"
+                   className={`w-full bg-black/60 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg focus:outline-none focus:border-[#D4AF37] resize-none transition-colors ${inputText === 'PLAYFAIR' ? 'text-white' : 'text-green-500'}`}
                    rows={3}
                  />
                </div>
@@ -227,7 +210,7 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
            </div>
 
            <div className="bg-blue-900/20 border border-blue-500/30 p-6 rounded-2xl shadow-lg">
-             <h3 className="flex items-center gap-2 font-black uppercase text-sm text-blue-400 mb-3">
+             <h3 className="flex items-center gap-2 font-black uppercase text-sm text-blue-400 mb-3 tracking-widest">
                <LucideInfo className="w-4 h-4" />
                The Rules
              </h3>
@@ -282,17 +265,19 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
               <div className="mt-12 w-full pt-8 border-t border-white/10">
                  <div className="bg-black/60 rounded-2xl p-6 border border-white/5 flex flex-col md:flex-row items-center gap-8 shadow-inner">
                    <div className="flex-1 w-full text-center">
-                      <label className="text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-black mb-2 block">Coded Result</label>
-                      <div className="bg-black border-2 border-[#D4AF37] rounded-xl p-4 md:p-6 font-black text-2xl md:text-5xl text-[#D4AF37] shadow-[inset_0_2px_15px_rgba(0,0,0,1)] tracking-[0.2em] break-all font-mono uppercase">
+                      <label className="text-[10px] uppercase tracking-widest text-[#D4AF37]/60 font-black mb-2 block italic">Coded Result Output</label>
+                      <div className="bg-black border-2 border-[#D4AF37] rounded-xl p-4 md:p-6 font-black text-2xl md:text-5xl text-center text-[#D4AF37] shadow-[inset_0_2px_15px_rgba(0,0,0,1)] tracking-[0.2em] break-all font-mono uppercase italic">
                        {result || '---'}
                       </div>
                    </div>
-                   <button
-                     className="w-full md:w-auto h-16 px-10 bg-[#008044] text-white hover:bg-[#006435] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95"
-                     onClick={() => navigator.clipboard.writeText(result)}
-                   >
-                     Sync To DNA
-                   </button>
+                   {onNavigateToGame && (
+                    <button
+                      className="w-full md:w-auto h-20 px-10 bg-green-600 text-white hover:bg-green-500 font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95"
+                      onClick={onNavigateToGame}
+                    >
+                      Play
+                    </button>
+                    )}
                  </div>
               </div>
            </div>
@@ -326,6 +311,8 @@ export const PlayfairPage: React.FC<PlayfairPageProps> = ({ onBack, youtuber }) 
           &copy; 2026 CODE KRACKER XR | Bigram Processing Unit v1.0
        </p>
      </div>
+
+     <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.05] scanline"></div>
    </div>
  );
 };
