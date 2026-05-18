@@ -346,7 +346,7 @@ export const CaesarGamePage: React.FC<CaesarGamePageProps> = ({
           className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-black uppercase tracking-widest text-[10px]">
+          <span className="font-black uppercase tracking-widest text-[16px]">
             Return to Encoder
           </span>
         </button>

@@ -7,20 +7,20 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 interface RailFenceGamePageProps {
- onBack: () => void;
- onPostResults?: (data: { sponsorKey: string; gameCode: string; time: string }) => void;
- youtuber?: {
-   name: string;
-   avatar: string;
- };
- initialCode: string;
- targetRails: number;
- targetCols: number;
- creatorDocId: string;
+  onReturnToEncoder: () => void;
+  onPostResults?: (data: { sponsorKey: string; gameCode: string; time: string }) => void;
+  youtuber?: {
+    name: string;
+    avatar: string;
+  };
+  initialCode: string;
+  targetRails: number;
+  targetCols: number;
+  creatorDocId: string;
 }
 
 export const RailFenceGamePage: React.FC<RailFenceGamePageProps> = ({ 
-  onBack, 
+  onReturnToEncoder, 
   youtuber, 
   initialCode, 
   targetRails, 
@@ -193,29 +193,33 @@ export const RailFenceGamePage: React.FC<RailFenceGamePageProps> = ({
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
      <div className="fixed inset-0 z-0 bg-mesh opacity-10 pointer-events-none" />
 
-     {/* Mission Timer - Flush Right */}
-     <div className="fixed top-24 right-8 z-[100] flex flex-col items-end space-y-2 pointer-events-none">
-        <div className="bg-zinc-900/40 border-2 border-[#D4AF37]/40 backdrop-blur-xl px-4 py-2 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.2)] text-center min-w-[120px]">
-            <div className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest mb-1">Mission Time</div>
-            <div className="font-mono text-xl md:text-2xl font-black text-white tabular-nums">{formatTimeFull(elapsedMs)}</div>
-        </div>
+     {/* Floating UI Elements */}
+     <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+       <button
+         onClick={onReturnToEncoder}
+         className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+       >
+         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+         <span className="font-black uppercase tracking-widest text-[13px]">
+           Return to Encoder
+         </span>
+       </button>
      </div>
 
-     {/* Header */}
-     <div className="relative z-[70] w-full flex flex-col items-center pt-24 px-8">
-        <div className="w-full max-w-7xl relative flex flex-col items-center">
-            {/* Return to Encoder - Level with Title */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:block">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/60 px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md shadow-2xl"
-                >
-                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-[#D4AF37]" />
-                    <span className="font-black uppercase tracking-widest text-[10px] text-white">Return to Encoder</span>
-                </button>
-            </div>
-
-            <motion.h1
+     <div className="fixed top-[100px] right-6 md:right-10 z-[60] flex flex-col items-end gap-2 text-vault-gold">
+       <div className="bg-black/80 border-2 border-[#D4AF37]/40 rounded-xl p-3 px-6 shadow-[0_0_20px_rgba(212,175,55,0.1)] backdrop-blur-md">
+         <div className="text-[9px] font-black text-[#D4AF37]/60 uppercase tracking-widest mb-1 text-center font-sans tracking-widest">
+           Mission Time
+         </div>
+         <div className="text-2xl md:text-3xl font-black font-mono text-white tracking-widest tabular-nums">
+           {formatTimeFull(elapsedMs)}
+         </div>
+       </div>
+     </div>
+      {/* Header */}
+      <div className="relative z-[70] w-full flex flex-col items-center pt-24 px-8 pt-48">
+         <div className="w-full max-w-7xl relative flex flex-col items-center">
+             <motion.h1
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="font-black text-4xl md:text-7xl text-[#D4AF37] uppercase tracking-[-0.02em] md:tracking-[-0.05em] mb-2 italic drop-shadow-[0_0_20px_rgba(212,175,55,0.3)]"
@@ -226,17 +230,6 @@ export const RailFenceGamePage: React.FC<RailFenceGamePageProps> = ({
             <p className="text-[#22c55e] text-sm md:text-base font-black uppercase tracking-[0.4em] mb-12">
               {isFinished ? "CONGRATULATIONS! CODE CRACKED" : "Now map the cipher into the grid"}
             </p>
-            
-            {/* Mobile Return Button */}
-            <div className="md:hidden mb-8">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/60 px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md"
-                >
-                    <ChevronLeft className="w-4 h-4 text-[#D4AF37]" />
-                    <span className="font-black uppercase tracking-widest text-[9px] text-white">Return to Encoder</span>
-                </button>
-            </div>
         </div>
      </div>
 

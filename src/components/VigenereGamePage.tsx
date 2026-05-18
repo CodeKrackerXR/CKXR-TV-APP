@@ -5,24 +5,24 @@ import { VaultButton } from './VaultButton';
 import { ChevronLeft, Info, Zap, CheckCircle2 } from 'lucide-react';
 
 interface VigenereGamePageProps {
- onBack: () => void;
- initialCode: string;
- initialKey: string;
- targetText?: string;
- onPostResults?: (data: { gameCode: string; time: string; sponsorKey: string }) => void;
- youtuber?: {
-   name: string;
-   avatar: string;
-   teamName?: string;
-   sponsor?: {
-     name: string;
-   };
- };
+  onReturnToEncoder: () => void;
+  initialCode: string;
+  initialKey: string;
+  targetText?: string;
+  onPostResults?: (data: { gameCode: string; time: string; sponsorKey: string }) => void;
+  youtuber?: {
+    name: string;
+    avatar: string;
+    teamName?: string;
+    sponsor?: {
+      name: string;
+    };
+  };
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onBack, initialCode, initialKey, targetText, onPostResults, youtuber }) => {
+export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onReturnToEncoder, initialCode, initialKey, targetText, onPostResults, youtuber }) => {
  const [userKeyword, setUserKeyword] = useState('');
  const [userKeystream, setUserKeystream] = useState('');
  const [crackedLetters, setCrackedLetters] = useState('');
@@ -136,29 +136,32 @@ export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onBack, init
      />
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
 
-     {/* Mission Timer - Floating flush right under time of day (placeholder for time o day above it) */}
-     <div className="fixed top-32 right-8 z-[100] flex flex-col items-end space-y-2 pointer-events-none">
-        <div className="bg-zinc-900/40 border-2 border-vault-gold/40 backdrop-blur-xl px-4 py-2 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.2)] text-center min-w-[120px]">
-             <div className="text-[10px] font-black text-vault-gold uppercase tracking-widest mb-1">Mission Time</div>
-             <div className="font-mono text-xl md:text-2xl font-black text-white tabular-nums">{formatTimeFull(elapsedMs)}</div>
-        </div>
+     {/* Floating UI Elements */}
+     <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+       <button
+         onClick={onReturnToEncoder}
+         className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+       >
+         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+         <span className="font-black uppercase tracking-widest text-[13px]">
+           Return to Encoder
+         </span>
+       </button>
      </div>
 
-     {/* Header - No logo, Return button flush left */}
-     <div className="relative z-[70] w-full pt-12 px-8">
+     <div className="fixed top-[100px] right-6 md:right-10 z-[60] flex flex-col items-end gap-2 text-vault-gold">
+       <div className="bg-black/80 border-2 border-[#D4AF37]/40 rounded-xl p-3 px-6 shadow-[0_0_20px_rgba(212,175,55,0.1)] backdrop-blur-md">
+         <div className="text-[9px] font-black text-[#D4AF37]/60 uppercase tracking-widest mb-1 text-center font-sans tracking-widest">
+           Mission Time
+         </div>
+         <div className="text-2xl md:text-3xl font-black font-mono text-white tracking-widest tabular-nums">
+           {formatTimeFull(elapsedMs)}
+         </div>
+       </div>
+     </div>
+      <div className="relative z-[70] w-full pt-48 px-8">
         <div className="w-full max-w-7xl mx-auto flex flex-col items-start">
-            {/* Return to Encoder Button - Flush left */}
-            <div className="mb-8">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 group hover:text-vault-gold transition-all bg-black/60 px-4 py-2 rounded-lg border border-white/10 backdrop-blur-md shadow-2xl"
-                >
-                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-vault-gold" />
-                    <span className="font-black uppercase tracking-widest text-[10px] text-white">Return to Encoder</span>
-                </button>
-            </div>
-
-            <div className="w-full flex flex-col items-center">
+             <div className="w-full flex flex-col items-center">
                 <motion.h1
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}

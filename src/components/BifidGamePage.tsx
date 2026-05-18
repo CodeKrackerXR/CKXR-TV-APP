@@ -4,7 +4,7 @@ import { ASSETS } from '../constants';
 import { ChevronLeft, Info, Zap, CheckCircle2, Lock, Unlock, Grid3X3, Hash, ArrowRight } from 'lucide-react';
 
 interface BifidGamePageProps {
-  onBack: () => void;
+  onReturnToEncoder: () => void;
   initialCode: string;
   initialKey: string;
   youtuber?: any;
@@ -19,7 +19,7 @@ enum Phase {
   DECODE = 'DECODE'
 }
 
-export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onBack, initialCode, initialKey, youtuber, onPostResults }) => {
+export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder, initialCode, initialKey, youtuber, onPostResults }) => {
   const [currentPhase, setCurrentPhase] = useState<Phase>(Phase.GRID);
   const [userSquare, setUserSquare] = useState<string[]>(new Array(25).fill(''));
   const squareRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -64,6 +64,7 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onBack, initialCod
     const m = Math.floor(totalSeconds / 60);
     const s = totalSeconds % 60;
     const c = Math.floor((ms % 1000) / 10);
+    if (m >= 60) return "59:59:99";
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}:${c.toString().padStart(2, '0')}`;
   };
 
@@ -192,16 +193,32 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onBack, initialCod
 
   return (
     <div className="flex-1 flex flex-col h-full bg-black/60 backdrop-blur-md rounded-[40px] border-4 border-zinc-800 p-8 overflow-hidden relative">
-      <div className="absolute right-8 top-8 z-[100] bg-zinc-900 border-2 border-[#D4AF37] px-6 py-2 rounded-2xl shadow-2xl">
-         <div className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest mb-1">Mission Time</div>
-         <div className="font-mono text-2xl font-black text-white tabular-nums">{formatTimeFull(elapsedMs)}</div>
+      {/* Floating UI Elements */}
+      <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+        <button
+          onClick={onReturnToEncoder}
+          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+        >
+          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-black uppercase tracking-widest text-[13px]">
+            Return to Encoder
+          </span>
+        </button>
       </div>
 
-      <div className="flex items-center justify-between mb-8 border-b-2 border-zinc-800 pb-6">
-        <button onClick={onBack} className="flex items-center gap-2 group hover:text-[#D4AF37] transition-colors">
-          <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-black uppercase tracking-widest text-sm text-zinc-500">Return</span>
-        </button>
+      <div className="fixed top-[100px] right-6 md:right-10 z-[60] flex flex-col items-end gap-2">
+        <div className="bg-black/80 border-2 border-[#D4AF37]/40 rounded-xl p-3 px-6 shadow-[0_0_20px_rgba(212,175,55,0.1)] backdrop-blur-md">
+          <div className="text-[9px] font-black text-[#D4AF37]/60 uppercase tracking-widest mb-1 text-center font-sans tracking-widest">
+            Mission Time
+          </div>
+          <div className="text-2xl md:text-3xl font-black font-mono text-white tracking-widest tabular-nums">
+            {formatTimeFull(elapsedMs)}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-8 border-b-2 border-zinc-800 pb-6 pt-48">
+        <div className="w-24" />
         <div className="text-center flex-1">
           <h1 className="text-4xl font-black text-[#D4AF37] uppercase italic tracking-tighter">Bifid Decoder</h1>
           <p className="text-zinc-500 font-bold uppercase tracking-[0.3em] text-xs">Mission Intelligence</p>

@@ -14,11 +14,8 @@ import { RailFencePage } from './components/RailFencePage';
 import { RailFenceGamePage } from './components/RailFenceGamePage';
 import { VigenereCipherPage } from './components/VigenereCipherPage';
 import { VigenereGamePage } from './components/VigenereGamePage';
-import { EnigmaPage } from './components/EnigmaPage';
-import { EnigmaGamePage } from './components/EnigmaGamePage';
-import { runGearedEnigma } from './lib/enigmaUtils';
-import { AutokeyPage } from './components/AutokeyPage';
-import { AutokeyGamePage } from './components/AutokeyGamePage';
+import { ADFGVXPage } from './components/ADFGVXPage';
+import { ADFGVXGamePage } from './components/ADFGVXGamePage';
 import { TranspositionPage } from './components/TranspositionPage';
 import { PlayfairPage } from './components/PlayfairPage';
 import { TranspositionGamePage } from './components/TranspositionGamePage';
@@ -30,7 +27,10 @@ import { NihilistGamePage } from './components/NihilistGamePage';
 import { BifidPage } from './components/BifidPage';
 import { BifidGamePage } from './components/BifidGamePage';
 
-type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ENIGMA' | 'ENIGMA_GAME' | 'AUTOKEY' | 'AUTOKEY_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME';
+import { EnigmaPage } from './components/EnigmaPage';
+import { EnigmaGamePage } from './components/EnigmaGamePage';
+
+type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ADFGVX' | 'ADFGVX_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME' | 'ENIGMA_ENCODE' | 'ENIGMA_GAME';
 
 interface Profile {
   id: string;
@@ -184,7 +184,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     targetItem: "Impact driver",
     targetItemImage: "https://i.ibb.co/HTzpQjZK/Imapact-Driver.jpg",
     cipherName: "Enigma Cipher",
-    cipherVideoUrl: "https://www.youtube.com/watch?v=PzjQH7aJNhs",
+    cipherVideoUrl: "https://www.youtube.com/watch?v=hiOjqskDlS0",
     sponsor: {
       logo: "https://i.ibb.co/FjsDCGM/Pringles-logo.jpg",
       video: "https://www.youtube.com/watch?v=pEYkM3boSos",
@@ -207,8 +207,8 @@ const YOUTUBE_DATA: Youtuber[] = [
     jackpot: "$2,250,000",
     targetItem: "Headphones",
     targetItemImage: "https://i.ibb.co/xq6Fn1M3/Headphones.jpg",
-    cipherName: "Autokey Cipher",
-    cipherVideoUrl: "https://www.youtube.com/watch?v=LdIqAtI-_CU"
+    cipherName: "ADFGVX Cipher",
+    cipherVideoUrl: "https://www.youtube.com/watch?v=XqaJwp1EGRA"
   },
   {
     name: "Zach King",
@@ -570,26 +570,9 @@ export default function App() {
     return res;
   }, [vigenereInputText, vigenereKey]);
 
-  // Autokey State
-  const [autokeyInputText, setAutokeyInputText] = useState("VAULT");
-  const [autokeyKey, setAutokeyKey] = useState("CODE");
-
-  const autokeyEncoded = useMemo(() => {
-    const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const cleanText = autokeyInputText.toUpperCase().replace(/[^A-Z]/g, '');
-    const cleanKey = autokeyKey.toUpperCase().replace(/[^A-Z]/g, '');
-    if (!cleanText || !cleanKey) return "";
-
-    // Autokey logic: Key = primer + text
-    const fullKey = (cleanKey + cleanText).substring(0, cleanText.length);
-    let res = "";
-    for (let i = 0; i < cleanText.length; i++) {
-        const charIdx = ALPHABET.indexOf(cleanText[i]);
-        const keyIdx = ALPHABET.indexOf(fullKey[i]);
-        res += ALPHABET[(charIdx + keyIdx) % 26];
-    }
-    return res;
-  }, [autokeyInputText, autokeyKey]);
+  // ADFGVX State
+  const [adfgvxInitialCode, setAdfgvxInitialCode] = useState("");
+  const [adfgvxInitialKey, setAdfgvxInitialKey] = useState("");
 
   // Transposition State
   const [transpositionInputText, setTranspositionInputText] = useState("VAULT");
@@ -699,13 +682,14 @@ export default function App() {
   const [nihilistGridKey, setNihilistGridKey] = useState("PERFECT");
   const [nihilistAddKey, setNihilistAddKey] = useState("SHOT");
 
-  // Enigma State
-  const [enigmaInputText, setEnigmaInputText] = useState("AGENT");
-  const [enigmaRotorPos, setEnigmaRotorPos] = useState("A-A-A");
-
   // Bifid State
   const [bifidInputText, setBifidInputText] = useState("JSTU");
   const [bifidKey, setBifidKey] = useState("VAULT");
+
+  // Enigma State
+  const [enigmaInitialCode, setEnigmaInitialCode] = useState("");
+  const [enigmaInitialKey, setEnigmaInitialKey] = useState("");
+  const [enigmaWirings, setEnigmaWirings] = useState<string[]>([]);
 
   const bifidEncoded = useMemo(() => {
     const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
@@ -1000,10 +984,8 @@ export default function App() {
                   setCurrentScreen('RAIL_FENCE');
                 } else if (currentYoutuber.cipherName === "Vigenère Cipher") {
                   setCurrentScreen('VIGENERE');
-                } else if (currentYoutuber.cipherName === "Enigma Cipher") {
-                  setCurrentScreen('ENIGMA');
-                } else if (currentYoutuber.cipherName === "Autokey Cipher") {
-                  setCurrentScreen('AUTOKEY');
+                } else if (currentYoutuber.cipherName === "ADFGVX Cipher") {
+                  setCurrentScreen('ADFGVX');
                 } else if (currentYoutuber.cipherName === "Transposition Cipher") {
                   setCurrentScreen('TRANSPOSITION');
                 } else if (currentYoutuber.cipherName === "Playfair Cipher") {
@@ -1012,6 +994,8 @@ export default function App() {
                   setCurrentScreen('FOUR_SQUARE');
                 } else if (currentYoutuber.cipherName === "Nihilist Cipher") {
                   setCurrentScreen('NIHILIST');
+                } else if (currentYoutuber.cipherName === "Enigma Cipher") {
+                  setCurrentScreen('ENIGMA_ENCODE');
                 } else if (currentYoutuber.cipherName === "Bifid Cipher") {
                   setCurrentScreen('BIFID');
                 } else if (currentYoutuber.cipherName === "Caesar Cipher") {
@@ -1029,6 +1013,16 @@ export default function App() {
                 variant="outline"
                 className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
                 onClick={() => setCurrentScreen('CAESAR_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Enigma Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('ENIGMA_GAME')}
               >
                 Try out the Cipher
               </Button>
@@ -1054,21 +1048,11 @@ export default function App() {
               </Button>
             )}
 
-            {currentYoutuber.cipherName === "Enigma Cipher" && (
+            {currentYoutuber.cipherName === "ADFGVX Cipher" && (
               <Button 
                 variant="outline"
                 className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
-                onClick={() => setCurrentScreen('ENIGMA_GAME')}
-              >
-                Try out the Cipher
-              </Button>
-            )}
-
-            {currentYoutuber.cipherName === "Autokey Cipher" && (
-              <Button 
-                variant="outline"
-                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
-                onClick={() => setCurrentScreen('AUTOKEY_GAME')}
+                onClick={() => setCurrentScreen('ADFGVX_GAME')}
               >
                 Try out the Cipher
               </Button>
@@ -1249,6 +1233,28 @@ export default function App() {
             }}
           />
         );
+      case 'ENIGMA_ENCODE':
+        return (
+          <EnigmaPage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            onPlay={(data) => {
+              setEnigmaInitialCode(data.code);
+              setEnigmaInitialKey(data.key);
+              setEnigmaWirings(data.wirings);
+              setCurrentScreen('ENIGMA_GAME');
+            }}
+          />
+        );
+      case 'ENIGMA_GAME':
+        return (
+          <EnigmaGamePage 
+            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            initialCode={enigmaInitialCode}
+            initialKey={enigmaInitialKey}
+            wirings={enigmaWirings.length > 0 ? enigmaWirings : undefined}
+          />
+        );
       case 'NIHILIST':
         return (
           <NihilistPage 
@@ -1361,57 +1367,24 @@ export default function App() {
             }}
           />
         );
-      case 'AUTOKEY':
+      case 'ADFGVX':
         return (
-          <AutokeyPage 
+          <ADFGVXPage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
-            onNavigateToGame={() => setCurrentScreen('AUTOKEY_GAME')}
-            inputText={autokeyInputText}
-            setInputText={setAutokeyInputText}
-            keyword={autokeyKey}
-            setKeyword={setAutokeyKey}
-            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
-          />
-        );
-      case 'AUTOKEY_GAME':
-        return (
-          <AutokeyGamePage 
-            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
-            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
-            initialCode={autokeyEncoded}
-            targetText={autokeyInputText}
-            initialKey={autokeyKey}
-            onPostResults={(data) => {
-              if (selectedYoutuberIndex !== null) {
-                setEpisodePerformance(prev => {
-                  const next = [...prev];
-                  next[selectedYoutuberIndex] = {
-                    ...next[selectedYoutuberIndex],
-                    gameCode: data.gameCode,
-                    time: data.time,
-                    keyword: data.sponsorKey
-                  };
-                  return next;
-                });
-                setCurrentScreen('PLAYERS_INFO');
-              }
+            onPlay={(data) => {
+              setAdfgvxInitialCode(data.code);
+              setAdfgvxInitialKey(data.key);
+              setCurrentScreen('ADFGVX_GAME');
             }}
-          />
-        );
-      case 'ENIGMA':
-        return (
-          <EnigmaPage 
-            onBack={() => setCurrentScreen('EPISODE_SETTINGS')} 
-            onPlay={() => setCurrentScreen('ENIGMA_GAME')}
             youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
           />
         );
-      case 'ENIGMA_GAME':
+      case 'ADFGVX_GAME':
         return (
-          <EnigmaGamePage 
+          <ADFGVXGamePage 
             onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
-            initialCode={runGearedEnigma(enigmaInputText, enigmaRotorPos, 'ENCODE').result}
-            initialKey={enigmaRotorPos}
+            initialCode={adfgvxInitialCode}
+            initialKey={adfgvxInitialKey}
             onPostResults={(data) => {
               if (selectedYoutuberIndex !== null) {
                 setEpisodePerformance(prev => {
