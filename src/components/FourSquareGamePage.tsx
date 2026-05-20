@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Info, Zap, CheckCircle2, LayoutGrid, Timer } from 'lucide-react';
 
 interface FourSquareGamePageProps {
+  onBack: () => void;
   onReturnToEncoder: () => void;
   initialCode: string;
   initialKey1?: string;
@@ -14,6 +15,7 @@ interface FourSquareGamePageProps {
 const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
 
 export const FourSquareGamePage: React.FC<FourSquareGamePageProps> = ({ 
+  onBack,
   onReturnToEncoder, 
   initialCode, 
   initialKey1 = 'VAULT', 
@@ -217,7 +219,16 @@ export const FourSquareGamePage: React.FC<FourSquareGamePageProps> = ({
   return (
     <div className="flex-1 flex flex-col h-full bg-black/60 backdrop-blur-md rounded-[40px] border-4 border-zinc-800 p-8 overflow-hidden relative">
       {/* Floating UI Elements */}
-      <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+      <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] flex flex-col gap-4 pointer-events-auto">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+        >
+          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-black uppercase tracking-widest text-[13px]">
+            Back to Detail
+          </span>
+        </button>
         <button
           onClick={onReturnToEncoder}
           className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"

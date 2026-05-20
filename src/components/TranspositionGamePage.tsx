@@ -162,6 +162,11 @@ export const TranspositionGamePage: React.FC<TranspositionGamePageProps> = ({
    return res;
  }, [gridData, numRows, numCols]);
 
+ const handleCrackCode = () => {
+   setIsFinished(true); // Stop timer
+   setShowCongratulationPopup(true); // Show success popup
+ };
+
  const panelHeaderStyle = "bg-black/60 text-white font-black text-[22px] lg:text-[30px] py-2 px-4 uppercase text-center tracking-widest border-b border-[#D4AF37]/10 italic";
 
  return (
@@ -332,10 +337,7 @@ export const TranspositionGamePage: React.FC<TranspositionGamePageProps> = ({
                <VaultButton
                  variant="primary"
                  className="py-6 px-12 text-lg shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-                 onClick={() => {
-                    setIsFinished(true);
-                    setShowCongratulationPopup(true);
-                 }}
+                 onClick={handleCrackCode}
                >
                  <LucideCheckCircle2 className="w-6 h-6 mr-3" />
                  CRACK CODE
@@ -360,39 +362,50 @@ export const TranspositionGamePage: React.FC<TranspositionGamePageProps> = ({
 
      {/* Success Popup */}
      <AnimatePresence>
-        {showCongratulationPopup && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex items-center justify-center px-6">
-                <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-zinc-900/90 border-4 border-[#D4AF37] p-12 rounded-[40px] max-w-2xl w-full text-center shadow-[0_0_100px_rgba(212,175,55,0.3)] relative overflow-hidden backdrop-blur-2xl">
-                    <LucideCheckCircle2 className="w-20 h-20 text-[#22c55e] mx-auto mb-6 shadow-2xl" />
-                    <h2 className="text-white text-5xl font-black uppercase italic tracking-tighter mb-4">Congratulations!</h2>
-                    <p className="text-[#D4AF37] text-2xl font-bold uppercase tracking-widest mb-4 italic underline">You Crack the Code</p>
-                    <div className="flex flex-col gap-4 mb-8 bg-black/40 p-6 rounded-2xl border border-white/10">
-                        <div className="flex justify-between items-center px-4">
-                            <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Cracked Word:</span>
-                            <span className="text-white font-black text-2xl tracking-[0.2em] font-mono">{finalPlaintext}</span>
-                        </div>
-                        <div className="flex justify-between items-center px-4">
-                            <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Mission Time:</span>
-                            <span className="text-[#D4AF37] font-mono text-2xl font-black italic">{formatTimeFull(elapsedMs)}</span>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={() => {
-                            if (onPostResults) {
-                                onPostResults({
-                                    gameCode: finalPlaintext,
-                                    time: formatTimeFull(elapsedMs),
-                                    sponsorKey: userKeyword || "NONE"
-                                });
-                            }
-                        }}
-                        className="w-full bg-[#22c55e] text-white py-6 rounded-2xl text-2xl font-black uppercase tracking-widest hover:bg-[#16a34a] transition-all shadow-[0_0_30px_rgba(34,197,94,0.4)] active:scale-95"
-                    >
-                        Submit Time
-                    </button>
-                </motion.div>
-            </motion.div>
-        )}
+       {showCongratulationPopup && (
+         <div className="fixed inset-0 z-[500] flex items-center justify-center px-6 bg-black/95 backdrop-blur-xl">
+           <motion.div
+             initial={{ scale: 0.9, y: 20, opacity: 0 }}
+             animate={{ scale: 1, y: 0, opacity: 1 }}
+             exit={{ scale: 0.9, y: 20, opacity: 0 }}
+             className="bg-zinc-900/90 border-4 border-[#D4AF37] p-12 rounded-[40px] max-w-2xl w-full text-center shadow-[0_0_100px_rgba(212,175,55,0.3)] relative overflow-hidden backdrop-blur-2xl"
+           >
+             <div className="mb-8 flex justify-center">
+               <div className="w-20 h-20 rounded-full bg-[#D4AF37]/20 border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.5)]">
+                 <LucideCheckCircle2 className="w-12 h-12 text-[#22c55e]" />
+               </div>
+             </div>
+             <h2 className="text-white text-5xl font-black uppercase italic tracking-tighter mb-4">Congratulations!</h2>
+             <p className="text-[#D4AF37] text-2xl font-bold uppercase tracking-widest mb-4 italic font-bold">You Cracked the Code</p>
+             
+             <div className="flex flex-col gap-4 mb-8 bg-black/40 p-6 rounded-2xl border border-white/10">
+               <div className="flex justify-between items-center px-4">
+                 <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Cracked Word:</span>
+                 <span className="text-white font-black text-2xl tracking-[0.2em] font-mono uppercase">{finalPlaintext}</span>
+               </div>
+               <div className="flex justify-between items-center px-4">
+                 <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Mission Time:</span>
+                 <span className="text-[#D4AF37] font-mono text-2xl font-black italic">{formatTimeFull(elapsedMs)}</span>
+               </div>
+             </div>
+             
+             <button 
+               onClick={() => {
+                 if (onPostResults) {
+                   onPostResults({
+                     gameCode: finalPlaintext,
+                     time: formatTimeFull(elapsedMs),
+                     sponsorKey: userKeyword || initialKey || "NONE"
+                   });
+                 }
+               }}
+               className="w-full bg-[#22c55e] text-white py-6 rounded-2xl text-2xl font-black uppercase tracking-widest hover:bg-[#16a34a] transition-all shadow-[0_0_30px_rgba(34,197,94,0.4)] active:scale-95"
+             >
+               Submit Time
+             </button>
+           </motion.div>
+         </div>
+       )}
      </AnimatePresence>
 
      <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.05] scanline"></div>

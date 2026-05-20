@@ -5,6 +5,7 @@ import { VaultButton } from './VaultButton';
 import { ChevronLeft, Info, Zap, CheckCircle2 } from 'lucide-react';
 
 interface VigenereGamePageProps {
+  onBack: () => void;
   onReturnToEncoder: () => void;
   initialCode: string;
   initialKey: string;
@@ -22,13 +23,14 @@ interface VigenereGamePageProps {
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onReturnToEncoder, initialCode, initialKey, targetText, onPostResults, youtuber }) => {
+export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onBack, onReturnToEncoder, initialCode, initialKey, targetText, onPostResults, youtuber }) => {
  const [userKeyword, setUserKeyword] = useState('');
  const [userKeystream, setUserKeystream] = useState('');
  const [crackedLetters, setCrackedLetters] = useState('');
  const [isFinished, setIsFinished] = useState(false);
  const [elapsedMs, setElapsedMs] = useState(0);
  const [showCongratulationPopup, setShowCongratulationPopup] = useState(false);
+ const [showErrorPopup, setShowErrorPopup] = useState(false);
 
  // Interactive state for grid row and column highlighting
  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
@@ -120,6 +122,15 @@ export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onReturnToEn
  const panelHeaderStyle = "bg-black/60 text-white font-display font-black text-[22px] lg:text-[30px] py-2 px-4 uppercase text-center tracking-widest border-b border-vault-gold/10";
 
  const handleFinish = () => {
+    const cleanProposed = crackedLetters.toUpperCase().replace(/[^A-Z]/g, '');
+    const cleanTarget = (targetText || "").toUpperCase().replace(/[^A-Z]/g, '');
+    
+    if (cleanTarget && cleanProposed !== cleanTarget) {
+      setShowErrorPopup(true);
+      setTimeout(() => setShowErrorPopup(false), 2000);
+      return;
+    }
+
     setIsFinished(true);
     setShowCongratulationPopup(true);
  };
@@ -137,7 +148,16 @@ export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onReturnToEn
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
 
      {/* Floating UI Elements */}
-     <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+     <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] flex flex-col gap-4 pointer-events-auto">
+       <button
+         onClick={onBack}
+         className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+       >
+         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+         <span className="font-black uppercase tracking-widest text-[13px]">
+           Back to Detail
+         </span>
+       </button>
        <button
          onClick={onReturnToEncoder}
          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
@@ -421,6 +441,21 @@ export const VigenereGamePage: React.FC<VigenereGamePageProps> = ({ onReturnToEn
          </div>
        </div>
      </div>
+
+      {/* Notifications */}
+      <AnimatePresence>
+        {showErrorPopup && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[200] bg-red-600 text-white px-8 py-4 rounded-xl font-black uppercase tracking-[0.2em] shadow-[0_0_40px_rgba(239,68,68,0.4)] flex items-center gap-3 border-2 border-white/20"
+          >
+            <Zap className="w-6 h-6 animate-pulse" />
+            Decoding Mismatch Detected
+          </motion.div>
+        )}
+      </AnimatePresence>
 
      {/* Congratulations Popup */}
      <AnimatePresence>

@@ -15,9 +15,14 @@ interface EnigmaGamePageProps {
   initialCode: string;
   initialKey: string; // "A-B-C"
   wirings?: string[];
+  youtuber?: {
+    name: string;
+    avatar: string;
+  };
+  onPostResults?: (data: { sponsorKey: string; gameCode: string; time: string }) => void;
 }
 
-export const EnigmaGamePage: React.FC<EnigmaGamePageProps> = ({ onBack, initialCode, initialKey, wirings = ROTOR_WIRINGS }) => {
+export const EnigmaGamePage: React.FC<EnigmaGamePageProps> = ({ onBack, initialCode, initialKey, wirings = ROTOR_WIRINGS, youtuber, onPostResults }) => {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -159,8 +164,8 @@ export const EnigmaGamePage: React.FC<EnigmaGamePageProps> = ({ onBack, initialC
     if (!correctDecoded) return;
     const userAnswer = userDecoded.join('');
     if (userAnswer === correctDecoded) {
-      setIsFinished(true);
-      setShowSuccessModal(true);
+      setIsFinished(true); // Stop timer
+      setShowSuccessModal(true); // Show popup
       setDecodeError(false);
     } else {
       setDecodeError(true);
@@ -460,43 +465,43 @@ export const EnigmaGamePage: React.FC<EnigmaGamePageProps> = ({ onBack, initialC
       {/* Success Modal */}
       <AnimatePresence>
         {showSuccessModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+              className="absolute inset-0 bg-black/95 backdrop-blur-xl"
               onClick={() => setShowSuccessModal(false)}
             />
             <motion.div
               initial={{ scale: 0.8, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 20 }}
-              className="relative w-full max-w-xl bg-vault-panel/90 border-2 border-vault-gold rounded-[40px] p-8 md:p-12 shadow-[0_0_100px_rgba(212,175,55,0.3)] text-center overflow-hidden"
+              className="relative w-full max-w-xl bg-vault-panel/95 border-4 border-vault-gold rounded-[40px] p-8 md:p-12 shadow-[0_0_100px_rgba(212,175,55,0.4)] text-center overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(212,175,55,0.1)_0%,transparent_60%)] -z-10" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(212,175,55,0.15)_0%,transparent_60%)] -z-10" />
               <div className="mb-8 flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-vault-gold/20 border border-vault-gold flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.4)]">
-                  <CheckCircle2 className="w-10 h-10 text-vault-gold" />
+                <div className="w-20 h-20 rounded-full bg-vault-gold/20 border-2 border-vault-gold flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.5)]">
+                  <CheckCircle2 className="w-12 h-12 text-vault-gold" />
                 </div>
               </div>
-              <h2 className="font-display font-black text-3xl md:text-5xl text-vault-gold uppercase tracking-tighter mb-2">
-                CONGRATULATIONS
+              <h2 className="font-display font-black text-4xl md:text-5xl text-white uppercase tracking-tighter mb-2">
+                Congratulations!
               </h2>
-              <p className="font-display text-white/50 uppercase tracking-[0.3em] text-[10px] md:text-xs mb-10">
-                You cracked the code
+              <p className="font-display text-vault-gold uppercase tracking-[0.3em] text-[10px] md:text-xs mb-10 font-bold">
+                You Cracked the Code
               </p>
               <div className="space-y-8 mb-12">
                 <div>
-                  <div className="text-[10px] font-black text-vault-gold uppercase tracking-widest mb-3 opacity-60">Decrypted Name</div>
+                  <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">Decrypted Word</div>
                   <div className="font-display font-black text-4xl md:text-6xl text-white tracking-widest bg-white/5 py-4 rounded-2xl border border-white/10 uppercase">
                     {userDecoded.join('')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-black text-vault-gold uppercase tracking-widest mb-3 opacity-60">Completion Time</div>
-                  <div className="font-mono text-3xl md:text-5xl font-black text-white bg-black/40 py-4 rounded-2xl border border-white/5 tabular-nums">
+                  <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">Mission Time</div>
+                  <div className="font-mono text-3xl md:text-5xl font-black text-vault-gold bg-black/40 py-4 rounded-2xl border border-white/5 tabular-nums">
                     {formatTimeFull(elapsedMs)}
                   </div>
                 </div>
@@ -504,19 +509,19 @@ export const EnigmaGamePage: React.FC<EnigmaGamePageProps> = ({ onBack, initialC
               <div className="flex flex-col gap-4">
                 <VaultButton
                   variant="primary"
-                  className="w-full py-5 text-xl font-black hover:scale-105 transition-transform"
+                  className="w-full py-6 text-2xl font-black transition-transform bg-[#22c55e] border-[#22c55e] hover:bg-[#16a34a] shadow-[0_0_30px_rgba(34,197,94,0.4)]"
                   onClick={() => {
-                    // Submit logic would go here
+                    if (onPostResults) {
+                      onPostResults({
+                        sponsorKey: userKey.join('-') || initialKey,
+                        gameCode: userDecoded.join(''),
+                        time: formatTimeFull(elapsedMs)
+                      });
+                    }
                   }}
                 >
-                  SUBMIT INTEL
+                  Submit Time
                 </VaultButton>
-                <button
-                  onClick={() => setShowSuccessModal(false)}
-                  className="text-[10px] font-bold text-white/40 uppercase tracking-widest hover:text-white transition-colors"
-                >
-                  Dismiss
-                </button>
               </div>
             </motion.div>
           </div>

@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion, AnimatePresence, animate } from 'motion/react';
-import { User, Plus, LogIn, ArrowRight, Tv, Pencil, Play, PlayCircle } from 'lucide-react';
+import { User, Plus, LogIn, ArrowRight, Tv, Pencil, Play, PlayCircle, History as HistoryIcon, ChevronLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CaesarCipherPage } from './components/CaesarCipherPage';
 import { CaesarGamePage } from './components/CaesarGamePage';
+import { AtlasCipherPage } from './components/AtlasCipherPage';
+import { AtlasGamePage } from './components/AtlasGamePage';
 import { CurrencyAuthenticator } from './components/CurrencyAuthenticator';
 import { RailFencePage } from './components/RailFencePage';
 import { RailFenceGamePage } from './components/RailFenceGamePage';
@@ -26,11 +28,13 @@ import { NihilistPage } from './components/NihilistPage';
 import { NihilistGamePage } from './components/NihilistGamePage';
 import { BifidPage } from './components/BifidPage';
 import { BifidGamePage } from './components/BifidGamePage';
+import { AtlasSessionProvider } from './context/atlasSessionContext';
 
 import { EnigmaPage } from './components/EnigmaPage';
 import { EnigmaGamePage } from './components/EnigmaGamePage';
+import { CipherHistoryPage } from './components/CipherHistoryPage';
 
-type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ADFGVX' | 'ADFGVX_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME' | 'ENIGMA_ENCODE' | 'ENIGMA_GAME';
+type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ADFGVX' | 'ADFGVX_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME' | 'ENIGMA_ENCODE' | 'ENIGMA_GAME' | 'CIPHER_HISTORY' | 'ATLAS_ENCODE' | 'ATLAS_GAME';
 
 interface Profile {
   id: string;
@@ -304,6 +308,25 @@ const YOUTUBE_DATA: Youtuber[] = [
     targetItemImage: "https://i.ibb.co/rJhpLhD/Noctis-Key.jpg",
     cipherName: "Bifid Cipher",
     cipherVideoUrl: "https://www.youtube.com/watch?v=V8rEh1b_Kmg"
+  },
+  {
+    name: "TBA - Episode 11",
+    teamName: "TEAM 11",
+    avatar: "https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png",
+    profile: "https://www.youtube.com/",
+    TheHuntThumbNail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
+    thumbnail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
+    TheHuntVideo: "https://www.youtube.com/",
+    TheBreakInThumbNail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
+    TheBreakInVideo: "https://www.youtube.com/",
+    DigitalCoinThumbNail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
+    DigitalCoinShort: "https://www.youtube.com/",
+    question: "Episode 11 Question TBD",
+    jackpot: "$3,750,000",
+    targetItem: "TBD",
+    targetItemImage: "https://i.ibb.co/rJhpLhD/Noctis-Key.jpg",
+    cipherName: "Atlas Cipher",
+    cipherVideoUrl: "https://www.youtube.com/"
   }
 ];
 
@@ -377,6 +400,13 @@ const DOLLAR_BILL_LEVELS = [
     secret: "The Green Number on the Back.",
     explanation: "Flip the bill over. Look at the bottom right of the green design. There is another tiny number there for the back-side engraving plate.",
     exampleAnswer: "56."
+  },
+  {
+    level: 11,
+    question: "Episode 11 Question TBD",
+    secret: "TBD",
+    explanation: "TBD",
+    exampleAnswer: "TBD"
   }
 ];
 
@@ -444,7 +474,7 @@ export default function App() {
     { keyword: "data", gameCode: "smart phone", time: "2:43:58", idCode: "L", seatCode: "Z" },
     { keyword: "chip", gameCode: "tasty", time: "3:13:24", idCode: "L12", seatCode: "W" },
     { keyword: "Blue", gameCode: "pending", time: "pending", idCode: "F134", seatCode: "pending" },
-    ...Array(7).fill({ keyword: "---", gameCode: "****-****", time: "--:--", idCode: "---", seatCode: "---" })
+    ...Array(8).fill({ keyword: "---", gameCode: "****-****", time: "--:--", idCode: "---", seatCode: "---" })
   ]);
   const toggleStats = (id: string) => {
     setExpandedStatsIds(prev => 
@@ -513,6 +543,13 @@ export default function App() {
   const [currentRotation, setCurrentRotation] = useState(0);
   const [caesarInitialCode, setCaesarInitialCode] = useState("CODEKRACKER");
   const [caesarTargetShift, setCaesarTargetShift] = useState(3);
+
+  // Atlas Cipher State
+  const [atlasInitialCode, setAtlasInitialCode] = useState("");
+  const [atlasTargetShift, setAtlasTargetShift] = useState(0);
+  const [atlasCrackedOutput, setAtlasCrackedOutput] = useState("");
+  const [atlasShift, setAtlasShift] = useState(0);
+  const [atlasRotation, setAtlasRotation] = useState(0);
 
   // Jackpot Animation Logic
   useEffect(() => {
@@ -855,7 +892,7 @@ export default function App() {
           }
         }
       } else if (currentScreen === 'HOME') {
-        if (e.key === 'ArrowRight') setMovieFocusedIndex(prev => Math.min(prev + 1, 9));
+        if (e.key === 'ArrowRight') setMovieFocusedIndex(prev => Math.min(prev + 1, YOUTUBE_DATA.length - 1));
         if (e.key === 'ArrowLeft') setMovieFocusedIndex(prev => Math.max(prev - 1, 0));
         if (e.key === 'Enter') {
           setSelectedYoutuberIndex(movieFocusedIndex);
@@ -873,7 +910,7 @@ export default function App() {
         if (e.key === 'Backspace') {
           setCurrentScreen(selectedYoutuberIndex !== null ? 'EPISODE_DETAIL' : 'HOME');
         }
-      } else if (currentScreen === 'CAESAR_WHEEL' || currentScreen === 'CAESAR_ENCODE' || currentScreen === 'CAESAR_GAME' || currentScreen === 'VIGENERE_GAME') {
+      } else if (currentScreen === 'CAESAR_WHEEL' || currentScreen === 'CAESAR_ENCODE' || currentScreen === 'CAESAR_GAME' || currentScreen === 'VIGENERE_GAME' || currentScreen === 'CIPHER_HISTORY' || currentScreen === 'ATLAS_ENCODE' || currentScreen === 'ATLAS_GAME') {
         if (e.key === 'Backspace') setCurrentScreen('EPISODE_DETAIL');
       }
     };
@@ -887,7 +924,7 @@ export default function App() {
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, x / rect.width));
-    const newIndex = Math.round(percentage * 9);
+    const newIndex = Math.round(percentage * (YOUTUBE_DATA.length - 1));
     setMovieFocusedIndex(newIndex);
   };
 
@@ -998,6 +1035,10 @@ export default function App() {
                   setCurrentScreen('ENIGMA_ENCODE');
                 } else if (currentYoutuber.cipherName === "Bifid Cipher") {
                   setCurrentScreen('BIFID');
+                } else if (currentYoutuber.cipherName === "Atlas Cipher") {
+                  setAtlasInitialCode("FRGHNHUDFNHU");
+                  setAtlasTargetShift(3);
+                  setCurrentScreen('ATLAS_GAME');
                 } else if (currentYoutuber.cipherName === "Caesar Cipher") {
                   setCurrentScreen('CAESAR_ENCODE');
                 } else {
@@ -1013,6 +1054,16 @@ export default function App() {
                 variant="outline"
                 className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
                 onClick={() => setCurrentScreen('CAESAR_GAME')}
+              >
+                Try out the Cipher
+              </Button>
+            )}
+
+            {currentYoutuber.cipherName === "Atlas Cipher" && (
+              <Button 
+                variant="outline"
+                className="w-full h-16 rounded-2xl bg-zinc-800 border-2 border-[#D4AF37] text-[#D4AF37] font-black uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all text-xl"
+                onClick={() => setCurrentScreen('ATLAS_GAME')}
               >
                 Try out the Cipher
               </Button>
@@ -1107,6 +1158,17 @@ export default function App() {
                 Try out the Cipher
               </Button>
             )}
+
+            {currentYoutuber.cipherName && currentYoutuber.cipherName !== "TBD" && (
+              <Button 
+                variant="ghost"
+                className="w-full h-12 text-[#D4AF37] font-black uppercase tracking-widest hover:text-white transition-all text-lg mt-2"
+                onClick={() => setCurrentScreen('CIPHER_HISTORY')}
+              >
+                <HistoryIcon className="w-5 h-5 mr-2" />
+                Cipher History
+              </Button>
+            )}
           </div>
 
           {/* Item Section */}
@@ -1158,6 +1220,13 @@ export default function App() {
     );
 
     switch (currentScreen) {
+      case 'CIPHER_HISTORY':
+        return (
+          <CipherHistoryPage 
+            cipherName={currentYoutuber.cipherName || ""} 
+            onBack={() => setCurrentScreen('EPISODE_DETAIL')} 
+          />
+        );
       case 'FOUR_SQUARE':
         return (
           <FourSquarePage 
@@ -1249,10 +1318,26 @@ export default function App() {
       case 'ENIGMA_GAME':
         return (
           <EnigmaGamePage 
-            onBack={() => setCurrentScreen('EPISODE_SETTINGS')}
+            onBack={() => setCurrentScreen('EPISODE_DETAIL')}
             initialCode={enigmaInitialCode}
             initialKey={enigmaInitialKey}
             wirings={enigmaWirings.length > 0 ? enigmaWirings : undefined}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
           />
         );
       case 'NIHILIST':
@@ -1854,7 +1939,13 @@ export default function App() {
                     className="w-[1000px] md:w-[1500px] lg:w-[2000px] h-auto object-contain drop-shadow-2xl -ml-4 -mt-4 cursor-pointer" 
                     onClick={() => {
                       setSelectedYoutuberIndex(movieFocusedIndex);
-                      setCurrentScreen('EPISODE_DETAIL');
+                      if (movieFocusedIndex === 10) {
+                        setAtlasInitialCode("FRGHNHUDFNHU");
+                        setAtlasTargetShift(3);
+                        setCurrentScreen('ATLAS_GAME');
+                      } else {
+                        setCurrentScreen('EPISODE_DETAIL');
+                      }
                     }}
                   />
                   <div className="flex items-center gap-4 ml-6 -mt-4 md:-mt-6 lg:ml-[12px] lg:-mt-[15px]">
@@ -1872,7 +1963,13 @@ export default function App() {
                       className="h-16 px-12 text-2xl font-bold bg-white text-black hover:bg-zinc-200"
                       onClick={() => {
                         setSelectedYoutuberIndex(movieFocusedIndex);
-                        setCurrentScreen('EPISODE_DETAIL');
+                        if (movieFocusedIndex === 10) {
+                          setAtlasInitialCode("FRGHNHUDFNHU");
+                          setAtlasTargetShift(3);
+                          setCurrentScreen('ATLAS_GAME');
+                        } else {
+                          setCurrentScreen('EPISODE_DETAIL');
+                        }
                       }}
                     >
                       Play Now
@@ -1976,7 +2073,13 @@ export default function App() {
                       onClick={() => {
                         setMovieFocusedIndex(i);
                         setSelectedYoutuberIndex(i);
-                        setCurrentScreen('EPISODE_DETAIL');
+                        if (i === 10) {
+                          setAtlasInitialCode("FRGHNHUDFNHU");
+                          setAtlasTargetShift(3);
+                          setCurrentScreen('ATLAS_GAME');
+                        } else {
+                          setCurrentScreen('EPISODE_DETAIL');
+                        }
                       }}
                     >
                       <div className="w-full h-full flex items-center px-8 relative pointer-events-none">
@@ -2182,7 +2285,7 @@ export default function App() {
                     logoClass = 'grayscale opacity-30';
                     mainTextClass = 'text-zinc-700 opacity-40';
                     subTextClass = 'text-zinc-800 opacity-40';
-                  } else { // Ep 5-10
+                  } else { // Ep 5+
                     borderClass = 'border-zinc-800 opacity-40';
                     logoClass = 'grayscale opacity-30';
                     mainTextClass = 'text-zinc-700 opacity-40';
@@ -2787,9 +2890,6 @@ export default function App() {
 
       case 'CHALLENGE_SUCCESS':
         if (selectedYoutuberIndex === null) return null;
-        const currentYoutuber = YOUTUBE_DATA[selectedYoutuberIndex];
-        const currentBillLevel = DOLLAR_BILL_LEVELS[selectedYoutuberIndex];
-        const currentSponsor = currentYoutuber.sponsor || DEFAULT_SPONSOR;
         
         return (
           <div className="flex-1 flex flex-col items-center justify-start pt-6 relative overflow-hidden">
@@ -3035,6 +3135,53 @@ export default function App() {
           </div>
         );
 
+      case 'ATLAS_ENCODE':
+        return (
+          <AtlasCipherPage 
+            onBack={() => setCurrentScreen('EPISODE_DETAIL')}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            onPlay={(data) => {
+              setAtlasInitialCode(data.code);
+              setAtlasTargetShift(data.shift);
+              setCurrentScreen('ATLAS_GAME');
+            }}
+          />
+        );
+      case 'ATLAS_GAME':
+        return (
+          <AtlasGamePage 
+            onBack={() => setCurrentScreen('EPISODE_DETAIL')}
+            onReturnToEncoder={() => setCurrentScreen('ATLAS_ENCODE')}
+            onNavigateToTheHunt={() => setCurrentScreen('VIDEO_PLAYER')}
+            onNavigateToDigitalCoin={() => setCurrentScreen('ONE_DOLLAR_BILL')}
+            onPostResults={(data) => {
+              if (selectedYoutuberIndex !== null) {
+                setEpisodePerformance(prev => {
+                  const next = [...prev];
+                  next[selectedYoutuberIndex] = {
+                    ...next[selectedYoutuberIndex],
+                    gameCode: data.gameCode,
+                    time: data.time,
+                    keyword: data.sponsorKey
+                  };
+                  return next;
+                });
+                setCurrentScreen('PLAYERS_INFO');
+              }
+            }}
+            initialCode={atlasInitialCode}
+            crackedOutput={atlasCrackedOutput}
+            setCrackedOutput={setAtlasCrackedOutput}
+            mappingLetter="A"
+            shift={atlasShift}
+            setShift={setAtlasShift}
+            targetShift={atlasTargetShift}
+            rotation={atlasRotation}
+            setRotation={setAtlasRotation}
+            youtuber={selectedYoutuberIndex !== null ? YOUTUBE_DATA[selectedYoutuberIndex] : undefined}
+            huntAnswers={["42"]}
+          />
+        );
       case 'CAESAR_WHEEL':
         return (
           <CaesarGamePage 
@@ -3133,14 +3280,16 @@ export default function App() {
   };
 
   return (
-    <TVContainer 
-      backgroundImage={getBackgroundImage()}
-      onLogoClick={() => setCurrentScreen('HOME')}
-      showLogo={currentScreen !== 'HOME' && currentScreen !== 'ONE_DOLLAR_BILL'}
-    >
-      <AnimatePresence mode="wait">
-        {renderScreen()}
-      </AnimatePresence>
-    </TVContainer>
+    <AtlasSessionProvider>
+      <TVContainer 
+        backgroundImage={getBackgroundImage()}
+        onLogoClick={() => setCurrentScreen('HOME')}
+        showLogo={currentScreen !== 'HOME' && currentScreen !== 'ONE_DOLLAR_BILL'}
+      >
+        <AnimatePresence mode="wait">
+          {renderScreen()}
+        </AnimatePresence>
+      </TVContainer>
+    </AtlasSessionProvider>
   );
 }

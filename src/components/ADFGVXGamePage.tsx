@@ -6,13 +6,20 @@ import { ChevronLeft, Info, Zap, CheckCircle2, LayoutGrid, Table, ArrowRightLeft
 import { ADFGVX_LABELS, getColumnRanks } from '../lib/adfgvxUtils';
 
 interface ADFGVXGamePageProps {
+  onBack: () => void;
   onReturnToEncoder: () => void;
   initialCode: string;
   initialKey?: string; // Format "GRIDKEY|TRANSKEY"
   onPostResults: (data: { gameCode: string; time: string; sponsorKey: string }) => void;
 }
 
-export const ADFGVXGamePage: React.FC<ADFGVXGamePageProps> = ({ onReturnToEncoder, initialCode, initialKey = 'CIPHER|CODE', onPostResults }) => {
+export const ADFGVXGamePage: React.FC<ADFGVXGamePageProps> = ({ 
+  onBack,
+  onReturnToEncoder, 
+  initialCode, 
+  initialKey = 'CIPHER|CODE', 
+  onPostResults 
+}) => {
  const [gridPart, transPart] = initialKey.split('|');
  const [isFinished, setIsFinished] = useState(false);
  const [showCongratulationPopup, setShowCongratulationPopup] = useState(false);
@@ -232,10 +239,17 @@ export const ADFGVXGamePage: React.FC<ADFGVXGamePageProps> = ({ onReturnToEncode
      </div>
 
      <div className="relative z-50 w-full flex justify-between border-b border-white/10 bg-black/40 backdrop-blur-sm h-16 md:h-20 items-center px-4 md:px-8">
-       <button onClick={onReturnToEncoder} className="flex items-center gap-2 group hover:text-vault-gold transition-colors">
-         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-         <span className="font-display font-black uppercase tracking-widest text-[10px] md:text-xs">Abort Operation</span>
-       </button>
+       <div className="flex items-center gap-4">
+         <button onClick={onBack} className="flex items-center gap-2 group hover:text-vault-gold transition-colors text-white/50">
+           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+           <span className="font-display font-black uppercase tracking-widest text-[10px] md:text-xs">Back to Detail</span>
+         </button>
+         <div className="w-px h-6 bg-white/10" />
+         <button onClick={onReturnToEncoder} className="flex items-center gap-2 group hover:text-vault-gold transition-colors">
+           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+           <span className="font-display font-black uppercase tracking-widest text-[10px] md:text-xs">Abort Operation</span>
+         </button>
+       </div>
        <div className="w-24 hidden md:block" />
      </div>
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 interface NihilistGamePageProps {
+  onBack: () => void;
   onReturnToEncoder: () => void;
   initialCode: string;
   initialGridKey: string;
@@ -33,6 +34,7 @@ const ALPHABET_NO_J = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
 type MissionPhase = 'RECONSTRUCT_SQUARE' | 'KEY_CONVERSION' | 'SUBTRACTION' | 'DECODE';
 
 export const NihilistGamePage: React.FC<NihilistGamePageProps> = ({
+  onBack,
   onReturnToEncoder,
   initialCode,
   initialGridKey = 'VAULT',
@@ -236,7 +238,16 @@ export const NihilistGamePage: React.FC<NihilistGamePageProps> = ({
      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/95 via-black/80 to-black/95 pointer-events-none" />
 
      {/* Floating UI Elements */}
-     <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+     <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] flex flex-col gap-4 pointer-events-auto">
+       <button
+         onClick={onBack}
+         className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+       >
+         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+         <span className="font-black uppercase tracking-widest text-[13px]">
+           Back to Detail
+         </span>
+       </button>
        <button
          onClick={onReturnToEncoder}
          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"

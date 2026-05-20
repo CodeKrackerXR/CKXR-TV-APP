@@ -4,6 +4,7 @@ import { ASSETS } from '../constants';
 import { ChevronLeft, Info, Zap, CheckCircle2, Lock, Unlock, Grid3X3, Hash, ArrowRight } from 'lucide-react';
 
 interface BifidGamePageProps {
+  onBack: () => void;
   onReturnToEncoder: () => void;
   initialCode: string;
   initialKey: string;
@@ -19,7 +20,7 @@ enum Phase {
   DECODE = 'DECODE'
 }
 
-export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder, initialCode, initialKey, youtuber, onPostResults }) => {
+export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onBack, onReturnToEncoder, initialCode, initialKey, youtuber, onPostResults }) => {
   const [currentPhase, setCurrentPhase] = useState<Phase>(Phase.GRID);
   const [userSquare, setUserSquare] = useState<string[]>(new Array(25).fill(''));
   const squareRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -33,6 +34,7 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder,
   const [highlightedCell, setHighlightedCell] = useState<{r: number, c: number} | null>(null);
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const [highlightedCol, setHighlightedCol] = useState<number | null>(null);
+  const [showCongratulationPopup, setShowCongratulationPopup] = useState(false);
 
   // Refs for auto-focus
   const coordRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -194,7 +196,16 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder,
   return (
     <div className="flex-1 flex flex-col h-full bg-black/60 backdrop-blur-md rounded-[40px] border-4 border-zinc-800 p-8 overflow-hidden relative">
       {/* Floating UI Elements */}
-      <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] pointer-events-auto">
+      <div className="fixed top-[180px] left-6 md:left-[60px] z-[60] flex flex-col gap-4 pointer-events-auto">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
+        >
+          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-black uppercase tracking-widest text-[13px]">
+            Back to Detail
+          </span>
+        </button>
         <button
           onClick={onReturnToEncoder}
           className="flex items-center gap-2 group hover:text-[#D4AF37] transition-all bg-black/40 backdrop-blur-md p-3 px-4 rounded-xl border border-white/10 shadow-2xl"
@@ -477,8 +488,14 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder,
                    {allLettersDone && (
                      <div className="flex flex-col items-center gap-6 mt-8">
                         {!isFinished ? (
-                           <button onClick={() => setIsFinished(true)} className="bg-[#D4AF37] text-black px-16 py-6 rounded-2xl font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">
-                              Finalize Crack
+                           <button 
+                             onClick={() => {
+                               setIsFinished(true);
+                               setShowCongratulationPopup(true);
+                             }} 
+                             className="bg-[#D4AF37] text-black px-16 py-6 rounded-2xl font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all"
+                           >
+                               Finalize Crack
                            </button>
                         ) : (
                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-4">
@@ -486,16 +503,6 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder,
                                  <CheckCircle2 className="w-7 h-7" />
                                  Mission Succeeded
                               </div>
-                              <button
-                                onClick={() => onPostResults({
-                                  gameCode: userFinalLetters.join(''),
-                                  time: formatTimeFull(elapsedMs),
-                                  sponsorKey: initialKey
-                                })}
-                                className="mt-4 bg-[#D4AF37] text-black px-12 py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-white hover:text-black transition-all"
-                              >
-                                Post Intelligence Results
-                              </button>
                            </motion.div>
                         )}
                      </div>
@@ -506,6 +513,56 @@ export const BifidGamePage: React.FC<BifidGamePageProps> = ({ onReturnToEncoder,
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showCongratulationPopup && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex items-center justify-center px-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-zinc-900 border-4 border-vault-gold p-12 rounded-[40px] max-w-2xl w-full text-center shadow-[0_0_100px_rgba(212,175,55,0.3)] relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-vault-gold animate-pulse" />
+              <CheckCircle2 className="w-20 h-20 text-[#22c55e] mx-auto mb-6" />
+              <h2 className="text-white text-5xl font-black uppercase italic tracking-tighter mb-4">Congratulations!</h2>
+              <p className="text-[#D4AF37] text-2xl font-bold uppercase tracking-widest mb-4 italic">You Crack the Code</p>
+              
+              <div className="flex flex-col gap-4 mb-8 bg-black/40 p-6 rounded-2xl border border-white/10">
+                <div className="flex justify-between items-center px-4">
+                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Cracked Word:</span>
+                  <span className="text-white font-display font-black text-2xl tracking-[0.2em]">{userFinalLetters.join('')}</span>
+                </div>
+                <div className="flex justify-between items-center px-4">
+                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Mission Time:</span>
+                  <span className="text-vault-gold font-mono text-2xl font-black">{formatTimeFull(elapsedMs)}</span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => {
+                  if (onPostResults) {
+                    onPostResults({
+                      gameCode: userFinalLetters.join(''),
+                      time: formatTimeFull(elapsedMs),
+                      sponsorKey: initialKey
+                    });
+                  }
+                }}
+                className="w-full bg-[#22c55e] text-white py-6 rounded-2xl text-2xl font-black uppercase tracking-widest hover:bg-[#16a34a] transition-all shadow-[0_0_30px_rgba(34,197,94,0.4)] active:scale-95"
+              >
+                Submit Time
+              </button>
+              
+              <div className="absolute inset-0 pointer-events-none opacity-[0.05] scanline" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.05] scanline"></div>
     </div>
   );

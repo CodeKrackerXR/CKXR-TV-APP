@@ -7,6 +7,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 interface RailFenceGamePageProps {
+  onBack: () => void;
   onReturnToEncoder: () => void;
   onPostResults?: (data: { sponsorKey: string; gameCode: string; time: string }) => void;
   youtuber?: {
@@ -20,6 +21,7 @@ interface RailFenceGamePageProps {
 }
 
 export const RailFenceGamePage: React.FC<RailFenceGamePageProps> = ({ 
+  onBack,
   onReturnToEncoder, 
   youtuber, 
   initialCode, 
@@ -28,8 +30,8 @@ export const RailFenceGamePage: React.FC<RailFenceGamePageProps> = ({
   onPostResults,
   creatorDocId
 }) => {
- const [numRails, setNumRails] = useState(1);
- const [numCols, setNumCols] = useState(1);
+ const [numRails, setNumRails] = useState(targetRails || 1);
+ const [numCols, setNumCols] = useState(targetCols || 1);
  const [userGrid, setUserGrid] = useState<string[][]>([]);
  const [isFinished, setIsFinished] = useState(false);
  const [elapsedMs, setElapsedMs] = useState(0);
