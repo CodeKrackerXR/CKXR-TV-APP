@@ -310,9 +310,9 @@ const YOUTUBE_DATA: Youtuber[] = [
     cipherVideoUrl: "https://www.youtube.com/watch?v=V8rEh1b_Kmg"
   },
   {
-    name: "TBA - Episode 11",
-    teamName: "TEAM 11",
-    avatar: "https://i.ibb.co/60PXBydQ/Ha-Fu-Go.png",
+    name: "TBD-Episode 11",
+    teamName: "",
+    avatar: "",
     profile: "https://www.youtube.com/",
     TheHuntThumbNail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
     thumbnail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
@@ -879,10 +879,25 @@ export default function App() {
   // Simple D-pad navigation simulation for the demo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if the user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      
+      const isNavigationKey = e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter';
+      
+      if (isInput && isNavigationKey) {
+        // If it's Enter, we might still want it to submit if it's a specific form,
+        // but for general navigation keys, we usually want to let the input handle them.
+        // For this app, navigation is triggered by Backspace, so we must block it.
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          return;
+        }
+      }
+      
       if (currentScreen === 'PROFILE_SELECTION') {
         if (e.key === 'ArrowRight') setFocusedIndex(prev => Math.min(prev + 1, profiles.length));
         if (e.key === 'ArrowLeft') setFocusedIndex(prev => Math.max(prev - 1, 0));
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !isInput) {
           if (focusedIndex === profiles.length) {
             setCustomAvatar(null);
             setCurrentScreen('CREATE_PROFILE');
@@ -894,24 +909,24 @@ export default function App() {
       } else if (currentScreen === 'HOME') {
         if (e.key === 'ArrowRight') setMovieFocusedIndex(prev => Math.min(prev + 1, YOUTUBE_DATA.length - 1));
         if (e.key === 'ArrowLeft') setMovieFocusedIndex(prev => Math.max(prev - 1, 0));
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !isInput) {
           setSelectedYoutuberIndex(movieFocusedIndex);
           setCurrentScreen('EPISODE_DETAIL');
         }
-        if (e.key === 'Backspace') setCurrentScreen('PROFILE_SELECTION');
+        if ((e.key === 'Backspace' || e.key === 'Delete') && !isInput) setCurrentScreen('PROFILE_SELECTION');
       } else if (currentScreen === 'EPISODE_DETAIL') {
-        if (e.key === 'Backspace') {
+        if ((e.key === 'Backspace' || e.key === 'Delete') && !isInput) {
           setHasSeenEpisode(false);
           setEpisodeAnswer('');
           setSelectedYoutuberIndex(null);
           setCurrentScreen('HOME');
         }
       } else if (currentScreen === 'VIDEO_PLAYER') {
-        if (e.key === 'Backspace') {
+        if ((e.key === 'Backspace' || e.key === 'Delete') && !isInput) {
           setCurrentScreen(selectedYoutuberIndex !== null ? 'EPISODE_DETAIL' : 'HOME');
         }
       } else if (currentScreen === 'CAESAR_WHEEL' || currentScreen === 'CAESAR_ENCODE' || currentScreen === 'CAESAR_GAME' || currentScreen === 'VIGENERE_GAME' || currentScreen === 'CIPHER_HISTORY' || currentScreen === 'ATLAS_ENCODE' || currentScreen === 'ATLAS_GAME') {
-        if (e.key === 'Backspace') setCurrentScreen('EPISODE_DETAIL');
+        if ((e.key === 'Backspace' || e.key === 'Delete') && !isInput) setCurrentScreen('EPISODE_DETAIL');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -1940,9 +1955,7 @@ export default function App() {
                     onClick={() => {
                       setSelectedYoutuberIndex(movieFocusedIndex);
                       if (movieFocusedIndex === 10) {
-                        setAtlasInitialCode("FRGHNHUDFNHU");
-                        setAtlasTargetShift(3);
-                        setCurrentScreen('ATLAS_GAME');
+                        setCurrentScreen('ATLAS_ENCODE');
                       } else {
                         setCurrentScreen('EPISODE_DETAIL');
                       }
@@ -1964,9 +1977,7 @@ export default function App() {
                       onClick={() => {
                         setSelectedYoutuberIndex(movieFocusedIndex);
                         if (movieFocusedIndex === 10) {
-                          setAtlasInitialCode("FRGHNHUDFNHU");
-                          setAtlasTargetShift(3);
-                          setCurrentScreen('ATLAS_GAME');
+                          setCurrentScreen('ATLAS_ENCODE');
                         } else {
                           setCurrentScreen('EPISODE_DETAIL');
                         }
@@ -2074,9 +2085,7 @@ export default function App() {
                         setMovieFocusedIndex(i);
                         setSelectedYoutuberIndex(i);
                         if (i === 10) {
-                          setAtlasInitialCode("FRGHNHUDFNHU");
-                          setAtlasTargetShift(3);
-                          setCurrentScreen('ATLAS_GAME');
+                          setCurrentScreen('ATLAS_ENCODE');
                         } else {
                           setCurrentScreen('EPISODE_DETAIL');
                         }
@@ -2087,23 +2096,27 @@ export default function App() {
                         
                         <div className="flex items-center gap-6 z-10">
                           {/* Avatar Circle */}
-                          <div className="relative w-24 h-24 rounded-full border-4 border-[#D4AF37] overflow-hidden shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-                            <img 
-                              src={youtuber.avatar} 
-                              alt={youtuber.name} 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
+                          {youtuber.avatar && (
+                            <div className="relative w-24 h-24 rounded-full border-4 border-[#D4AF37] overflow-hidden shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                              <img 
+                                src={youtuber.avatar} 
+                                alt={youtuber.name} 
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
 
                           {/* Text Info */}
                           <div className="flex flex-col">
                             <h4 className="text-3xl font-black text-white uppercase tracking-tighter italic leading-tight">
                               {youtuber.name}
                             </h4>
-                            <span className="text-lg font-bold text-red-600 uppercase tracking-widest">
-                              {youtuber.teamName}
-                            </span>
+                            {youtuber.teamName && (
+                              <span className="text-lg font-bold text-red-600 uppercase tracking-widest">
+                                {youtuber.teamName}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -3143,6 +3156,7 @@ export default function App() {
             onPlay={(data) => {
               setAtlasInitialCode(data.code);
               setAtlasTargetShift(data.shift);
+              setAtlasShift(data.shift); // Match the encoder shift
               setCurrentScreen('ATLAS_GAME');
             }}
           />

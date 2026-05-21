@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "CipherSession": {
+      "title": "Cipher Session",
+      "description": "Stores generated cube codes and cipher outputs.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "codes": {
+          "type": "array",
+          "description": "List of 50 unique codes (10 Live Map + 40 Decoys)."
+        },
+        "cipherOutputs": {
+          "type": "array",
+          "description": "List of 10 cipher outputs from the Live Map."
+        }
+      },
+      "required": ["sessionId", "timestamp", "codes", "cipherOutputs"]
+    }
+  },
+  "firestore": {
+    "/sessions/{sessionId}": {
+      "schema": "CipherSession",
+      "description": "Saved cipher sessions."
+    }
+  }
+}

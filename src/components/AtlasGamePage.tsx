@@ -76,6 +76,85 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
 
+  const [stage2NewCode, setStage2NewCode] = useState("");
+  const [stage2Episode, setStage2Episode] = useState("");
+  const [stage2Riddle, setStage2Riddle] = useState("");
+  const [stage3NewCode, setStage3NewCode] = useState("");
+  const [stage3SponsorAd, setStage3SponsorAd] = useState("");
+  const [stage3Position, setStage3Position] = useState("");
+
+  const [selectedStageLetter, setSelectedStageLetter] = useState("A");
+  const [pickedStageLetters, setPickedStageLetters] = useState<Set<string>>(new Set());
+  const [checkCodeStatus, setCheckCodeStatus] = useState<"idle" | "success" | "fail">("idle");
+
+  const getShiftedNumber = (numStr: string, s: number) => {
+    const num = parseInt(numStr);
+    if (isNaN(num)) return "";
+    return (((num - 1 + s) % 10 + 10) % 10 + 1).toString();
+  };
+
+  const getShiftedLetter = (char: string, s: number) => {
+    const idx = ALPHABET.indexOf(char.toUpperCase());
+    if (idx === -1) return "";
+    return ALPHABET[(idx + s + 26) % 26];
+  };
+
+  const currentCenterCode = useMemo(() => {
+    const innerIdx = (ALPHABET.indexOf(selectedStageLetter) + shift) % 26;
+    const currentNum = (innerIdx % 10) + 1;
+    return `${selectedStageLetter}${currentNum}`;
+  }, [selectedStageLetter, shift]);
+
+  const handleCheckCode = () => {
+    const savedCodes = JSON.parse(localStorage.getItem('atlas_live_map_codes') || '[]');
+    const savedCubes = JSON.parse(localStorage.getItem('atlas_session_cubes') || '[]');
+
+    const matchIndex = savedCodes.indexOf(currentCenterCode);
+
+    if (currentStage === 2) {
+      if (matchIndex !== -1 && matchIndex < 10) {
+        setCheckCodeStatus("success");
+        
+        const matchedCube = savedCubes[matchIndex];
+        const cipherCode = matchedCube.cipherOutput || "";
+
+        setStage2NewCode(cipherCode);
+        setStage2Episode("Episode " + (matchedCube.episode || ""));
+        setStage2Riddle("Riddle " + (matchedCube.riddleNumber || ""));
+        
+        // Also populate Stage 3 New Code but keep extra info hidden
+        setStage3NewCode(cipherCode);
+        setStage3SponsorAd("");
+        setStage3Position("");
+      } else {
+        setCheckCodeStatus("fail");
+        setStage2NewCode("");
+        setStage2Episode("");
+        setStage2Riddle("");
+      }
+    } else if (currentStage === 3) {
+      // Confirm what is posted in the new code box on stage 3
+      if (stage3NewCode && currentCenterCode === stage3NewCode) {
+        setCheckCodeStatus("success");
+        // Look up the cube data to reveal extra info
+        const matchedCube = savedCubes.find((c: any) => c.cipherOutput === currentCenterCode);
+        if (matchedCube) {
+          setStage3SponsorAd("Ad Sponsor " + (matchedCube.sponsorAd || ""));
+          setStage3Position(matchedCube.identificationLabel || "");
+        }
+      } else {
+        setCheckCodeStatus("fail");
+        setStage3SponsorAd("");
+        setStage3Position("");
+      }
+    }
+
+    setTimeout(() => {
+      setCheckCodeStatus("idle");
+      setPickedStageLetters(new Set());
+    }, 1000);
+  };
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning) {
@@ -183,15 +262,22 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
   const handleLetterClick = (letter: string) => {
     if (isSolved) return;
     if (crackedOutput.length >= cipherInput.length) return;
-    if (!hasInteractedWithWheel) {
+    if (currentStage === 1 && !hasInteractedWithWheel) {
       setShowRotationError(true);
       return;
     }
-    if (shift !== expectedShift && !suppressMismatch) {
+    if (currentStage === 1 && shift !== expectedShift && !suppressMismatch) {
       setPendingLetter(letter);
       setShowMismatchModal(true);
       return;
     }
+    
+    if (currentStage === 2 || currentStage === 3) {
+      setSelectedStageLetter(letter);
+      setPickedStageLetters(prev => new Set(prev).add(letter));
+      return;
+    }
+
     setCrackedOutput((prev) => prev + letter);
   };
 
@@ -509,9 +595,22 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                 cx="50"
                 cy="50"
                 r="50"
-                fill="#000"
-                stroke="#d4af37"
+                fill={
+                  checkCodeStatus === "success" 
+                    ? "#22c55e" 
+                    : checkCodeStatus === "fail" 
+                      ? "#ef4444" 
+                      : "#000"
+                }
+                stroke={
+                  checkCodeStatus === "success" 
+                    ? "#22c55e" 
+                    : checkCodeStatus === "fail" 
+                      ? "#ef4444" 
+                      : "#d4af37"
+                }
                 strokeWidth="0.5"
+                className="transition-colors duration-300"
               />
               {ALPHABET.map((letter, i) => {
                 const angle = (i * 360) / 26;
@@ -522,7 +621,7 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                     key={`outer-${i}`}
                     x={x}
                     y={y}
-                    fill="white"
+                    fill={pickedStageLetters.has(letter) ? "#22c55e" : "white"}
                     fontSize="4.5"
                     textAnchor="middle"
                     dominantBaseline="middle"
@@ -562,10 +661,9 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                   let innerDisplay = "";
                   if (currentStage === 1) {
                     innerDisplay = letter;
-                  } else if (currentStage === 2) {
-                    innerDisplay = (i + 1).toString();
                   } else {
-                    innerDisplay = ((i + 1) % 10).toString();
+                    // Stage 2 & 3: 1-10 repeat (1,2,3,4,5,6,7,8,9,10,1,2...)
+                    innerDisplay = ((i % 10) + 1).toString();
                   }
 
                   return (
@@ -593,64 +691,120 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                 stroke="rgba(212,175,55,0.3)"
                 strokeWidth="1"
               />
-              <text
-                x="50"
-                y="32"
-                fill="white"
-                fontSize="8"
-                textAnchor="middle"
-                className="font-black font-sans leading-none"
-              >
-                {mappingLetter} ={" "}
-                <tspan fill="#d4af37">
-                  {currentStage === 1 
-                    ? ALPHABET[(ALPHABET.indexOf(mappingLetter) + shift) % 26]
-                    : currentStage === 2
-                    ? letterToNumber(ALPHABET[(ALPHABET.indexOf(mappingLetter) + shift) % 26])
-                    : ((ALPHABET.indexOf(ALPHABET[(ALPHABET.indexOf(mappingLetter) + shift) % 26]) + 1) % 10)
-                  }
-                </tspan>
-              </text>
-              <text
-                x="50"
-                y="42"
-                fill="#d4af37"
-                fontSize="4"
-                textAnchor="middle"
-                className="font-black uppercase opacity-60"
-              >
-                Atlas Frequency
-              </text>
-              <text
-                x="50"
-                y="49"
-                fill="#ff3333"
-                fontSize="5"
-                textAnchor="middle"
-                className="font-black tracking-widest font-mono"
-              >
-                {currentStage === 1 ? cipherInput : cipherInput.split('').map(letterToNumber).join('-') || "------"}
-              </text>
-              <text
-                x="50"
-                y="58"
-                fill="white"
-                fontSize="4"
-                textAnchor="middle"
-                className="font-black uppercase opacity-60"
-              >
-                Calibration
-              </text>
-              <text
-                x="50"
-                y="65"
-                fill="#22c55e"
-                fontSize="5"
-                textAnchor="middle"
-                className="font-black tracking-widest"
-              >
-                {crackedOutput || "------"}
-              </text>
+              <g>
+                {(currentStage === 2 || currentStage === 3) ? (
+                  <>
+                    <text
+                      x="50"
+                      y="35"
+                      fill="white"
+                      fontSize="9"
+                      textAnchor="middle"
+                      className="font-black font-sans leading-none"
+                    >
+                      {selectedStageLetter} ={" "}
+                      <tspan fill="#d4af37">
+                        {(((ALPHABET.indexOf(selectedStageLetter) + shift) % 26 % 10) + 1)}
+                      </tspan>
+                    </text>
+                    
+                    <g 
+                      className="cursor-pointer group"
+                      onClick={handleCheckCode}
+                    >
+                      <circle 
+                        cx="50" 
+                        cy="59" 
+                        r="14" 
+                        fill={
+                          checkCodeStatus === "success" 
+                            ? "#22c55e" 
+                            : checkCodeStatus === "fail" 
+                              ? "#ef4444" 
+                              : "#52525b"
+                        }
+                        className={`transition-colors duration-300 ${checkCodeStatus === "idle" ? "group-hover:fill-zinc-600" : ""}`}
+                      />
+                      <text
+                        x="50"
+                        y="57"
+                        fill={checkCodeStatus === "fail" ? "white" : "white"}
+                        fontSize="3.5"
+                        textAnchor="middle"
+                        className="font-black uppercase tracking-widest pointer-events-none"
+                      >
+                        Check
+                      </text>
+                      <text
+                        x="50"
+                        y="63"
+                        fill={checkCodeStatus === "fail" ? "white" : "white"}
+                        fontSize="3.5"
+                        textAnchor="middle"
+                        className="font-black uppercase tracking-widest pointer-events-none"
+                      >
+                        Code
+                      </text>
+                    </g>
+                  </>
+                ) : (
+                  <>
+                    <text
+                      x="50"
+                      y="32"
+                      fill="white"
+                      fontSize="8"
+                      textAnchor="middle"
+                      className="font-black font-sans leading-none"
+                    >
+                      {mappingLetter} ={" "}
+                      <tspan fill="#d4af37">
+                        {ALPHABET[(ALPHABET.indexOf(mappingLetter) + shift) % 26]}
+                      </tspan>
+                    </text>
+                    <text
+                      x="50"
+                      y="42"
+                      fill="#d4af37"
+                      fontSize="4"
+                      textAnchor="middle"
+                      className="font-black uppercase opacity-60"
+                    >
+                      Atlas Frequency
+                    </text>
+                    <text
+                      x="50"
+                      y="49"
+                      fill="#ff3333"
+                      fontSize="5"
+                      textAnchor="middle"
+                      className="font-black tracking-widest font-mono"
+                    >
+                      {cipherInput}
+                    </text>
+                    <text
+                      x="50"
+                      y="58"
+                      fill="white"
+                      fontSize="4"
+                      textAnchor="middle"
+                      className="font-black uppercase opacity-60"
+                    >
+                      Calibration
+                    </text>
+                    <text
+                      x="50"
+                      y="65"
+                      fill="#22c55e"
+                      fontSize="5"
+                      textAnchor="middle"
+                      className="font-black tracking-widest"
+                    >
+                      {crackedOutput || "------"}
+                    </text>
+                  </>
+                )}
+              </g>
             </svg>
           </div>
 
@@ -681,17 +835,22 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
             <h2 className="text-xl md:text-3xl font-black uppercase tracking-[0.2em] leading-tight text-center lg:text-left">
               {isSolved ? (
                 <span className="text-[#22c55e]">Target Resolved! Atlas Code Cracked</span>
-              ) : shift === expectedShift ? (
-                <span className="text-[#22c55e] font-black uppercase">
-                  Select <span className="text-white">Outer Letters</span> to decode frequency
-                </span>
+              ) : currentStage === 1 ? (
+                shift === expectedShift ? (
+                  <span className="text-[#22c55e] font-black uppercase">
+                    Select <span className="text-white">Outer Letters</span> to decode frequency
+                  </span>
+                ) : (
+                  <span className="text-[#22c55e] font-black uppercase">
+                    CALIBRATE <span className="text-[#D4AF37]">INNER</span> FREQUENCY TO SET{" "}
+                    <span className="text-[#D4AF37] font-mono">
+                      {mappingLetter}={ALPHABET[expectedShift]}
+                    </span>
+                  </span>
+                )
               ) : (
                 <span className="text-[#22c55e] font-black uppercase">
-                  CALIBRATE <span className="text-[#D4AF37]">INNER</span> FREQUENCY TO
-                  SET{" "}
-                  <span className="text-[#D4AF37] font-mono">
-                    {mappingLetter}={currentStage === 1 ? ALPHABET[expectedShift] : currentStage === 2 ? letterToNumber(ALPHABET[expectedShift]) : (expectedShift + 1) % 10}
-                  </span>
+                  Pick <span className="text-white">letter</span> first and then rotate <span className="text-[#D4AF37]">wheel</span> to match the code
                 </span>
               )}
             </h2>
@@ -701,7 +860,13 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
             {[1, 2, 3].map((s) => (
               <button
                 key={s}
-                onClick={() => setCurrentStage(s as any)}
+                onClick={() => {
+                  setCurrentStage(s as any);
+                  setCrackedOutput("");
+                  setSelectedStageLetter("A");
+                  setPickedStageLetters(new Set());
+                  setHasInteractedWithWheel(false);
+                }}
                 className={`py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
                   currentStage === s 
                     ? "bg-[#D4AF37] text-black shadow-[0_0_20px_rgba(212,175,55,0.3)]" 
@@ -715,48 +880,110 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
 
           <div className="bg-[#121212] border border-[#D4AF37]/20 p-8 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden group">
             <div className="space-y-10 relative z-10">
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">
-                  Incoming Signal (Encoded)
-                </label>
-                <div className="w-full bg-black/60 border border-white/5 rounded-xl p-8 font-black text-2xl text-[#D4AF37] uppercase text-center tracking-[0.2em] shadow-inner font-mono">
-                  {currentStage === 1 ? cipherInput : cipherInput.split('').map(letterToNumber).join('-') || "------"}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">
-                  Decoded Sequence
-                </label>
-                <div className="relative">
-                  <div className="w-full bg-black/60 border border-white/5 rounded-xl p-8 font-black text-2xl text-[#22c55e] uppercase text-center tracking-[0.2em] shadow-inner">
-                    {crackedOutput || "------"}
+              {currentStage === 1 ? (
+                <>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">
+                      Incoming Signal (Encoded)
+                    </label>
+                    <div className="w-full bg-black/60 border border-white/5 rounded-xl p-8 font-black text-2xl text-[#D4AF37] uppercase text-center tracking-[0.2em] shadow-inner font-mono">
+                      {cipherInput}
+                    </div>
                   </div>
-                  {crackedOutput.length > 0 && (
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">
+                      Decoded Sequence
+                    </label>
+                    <div className="relative">
+                      <div className="w-full bg-black/60 border border-white/5 rounded-xl p-8 font-black text-2xl text-[#22c55e] uppercase text-center tracking-[0.2em] shadow-inner">
+                        {crackedOutput || "------"}
+                      </div>
+                      {crackedOutput.length > 0 && (
+                        <button
+                          onClick={handleDeleteLast}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 p-4 text-white/40 hover:text-white transition-colors"
+                        >
+                          <ChevronLeft className="w-10 h-10" strokeWidth={3} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-6 space-y-4">
                     <button
-                      onClick={handleDeleteLast}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-4 text-white/40 hover:text-white transition-colors"
+                      onClick={() => handleVerifySubmission()}
+                      disabled={isVerifying || !crackedOutput || isSolved}
+                      className="w-full py-6 font-black uppercase text-2xl rounded-2xl bg-white text-black hover:shadow-[0_0_30px_#fff] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
                     >
-                      <ChevronLeft className="w-10 h-10" strokeWidth={3} />
+                      {isVerifying ? "ANALYZING..." : isSolved ? "RESTRAINED" : "UnLock Wheel"}
                     </button>
-                  )}
-                </div>
-              </div>
 
-              <div className="pt-6 space-y-4">
-                <button
-                  onClick={() => handleVerifySubmission()}
-                  disabled={isVerifying || !crackedOutput || isSolved}
-                  className="w-full py-6 font-black uppercase text-2xl rounded-2xl bg-white text-black hover:shadow-[0_0_30px_#fff] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
-                >
-                  {isVerifying ? "ANALYZING..." : isSolved ? "RESTRAINED" : currentStage === 1 ? "UnLock Wheel" : "Resolve Signal"}
-                </button>
-
-                <div className="flex justify-between items-center text-[10px] font-black text-white/20 uppercase tracking-widest pt-4">
-                  <span>Sequence: {CREATOR_DOC_ID}</span>
-                  <span>Atlas Relay: ACTIVE</span>
+                    <div className="flex justify-between items-center text-[10px] font-black text-white/20 uppercase tracking-widest pt-4">
+                      <span>Sequence: {CREATOR_DOC_ID}</span>
+                      <span>Atlas Relay: ACTIVE</span>
+                    </div>
+                  </div>
+                </>
+              ) : currentStage === 2 ? (
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">New Code</label>
+                    <div className="w-full bg-black/60 border border-[#D4AF37]/30 rounded-2xl py-8 flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+                      <span className="text-6xl font-black text-white tracking-[0.2em] uppercase">
+                        {stage2NewCode || "---"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">Episode</label>
+                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 flex items-center justify-center">
+                        <span className="text-3xl font-black text-white tracking-widest uppercase">
+                          {stage2Episode || "---"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">Riddle</label>
+                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 flex items-center justify-center">
+                        <span className="text-3xl font-black text-white tracking-widest uppercase">
+                          {stage2Riddle || "---"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">New Code</label>
+                    <div className="w-full bg-black/60 border border-[#D4AF37]/30 rounded-2xl py-8 flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+                      <span className="text-6xl font-black text-white tracking-[0.2em] uppercase">
+                        {stage3NewCode || "---"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">Sponsor Ad</label>
+                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 flex items-center justify-center">
+                        <span className="text-3xl font-black text-white tracking-widest uppercase">
+                          {stage3SponsorAd || "---"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">Position</label>
+                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 flex items-center justify-center">
+                        <span className="text-3xl font-black text-white tracking-widest uppercase">
+                          {stage3Position || "---"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
