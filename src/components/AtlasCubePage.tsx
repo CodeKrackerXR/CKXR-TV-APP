@@ -556,10 +556,13 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
 
               <div className="flex items-center gap-3">
                 <button
-                  onClick={resetAllPlacements}
-                  className="px-4 py-2 border border-red-500/20 hover:border-red-500 bg-red-950/10 hover:bg-red-950/30 text-red-400 hover:text-red-300 transition-all text-[10px] uppercase font-bold tracking-widest rounded-xl hover:scale-105 active:scale-95"
+                  onClick={() => setIsNotesOpen(true)}
+                  className="px-4 py-2 bg-[#D4AF37] hover:bg-[#ffe281] text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5 shadow-[#D4AF37]/15 hover:scale-105"
+                  title="Open Notes Notepad"
+                  id="open-notes-deck-btn"
                 >
-                  Reset Placements
+                  <FileText className="w-3.5 h-3.5 text-black" />
+                  Notes
                 </button>
               </div>
             </div>
