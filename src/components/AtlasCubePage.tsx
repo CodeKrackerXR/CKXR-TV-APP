@@ -136,6 +136,16 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
   const [viewMode, setViewMode] = useState<WorkspaceMode>('game');
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // Reorder and move states
+  const [selectedCubeNum, setSelectedCubeNum] = useState<number | null>(null);
+  const [draggingCubeNumber, setDraggingCubeNumber] = useState<number | null>(null);
+  const [activeHoverCellIndex, setActiveHoverCellIndex] = useState<number | null>(null);
+  const [activeHoverPosition, setActiveHoverPosition] = useState<'before' | 'after' | null>(null);
+
+  // Touch and Long Press tracking refs
+  const longPressTimer = useRef<any>(null);
+  const touchStartRef = useRef<number | null>(null);
+
   // 3D Rotation angles
   const [rotationX, setRotationX] = useState(-15);
   const [rotationY, setRotationY] = useState(45);
@@ -226,6 +236,27 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
     } catch (e) {
       console.warn('LocalStorage save failed:', e);
     }
+  };
+
+  const moveCubeToInsertIndex = (fromIndex: number, insertIndex: number) => {
+    if (fromIndex === -1) return;
+    const item = cubes[fromIndex];
+    if (!item) return;
+
+    // Filter out the dragged item
+    const remaining = cubes.filter((_, idx) => idx !== fromIndex);
+    
+    let finalInsertIndex = insertIndex;
+    if (insertIndex > fromIndex) {
+      finalInsertIndex = insertIndex - 1;
+    }
+    
+    const updated = [
+      ...remaining.slice(0, finalInsertIndex),
+      item,
+      ...remaining.slice(finalInsertIndex)
+    ];
+    saveCubesState(updated);
   };
 
   const saveCubeState = (updatedFaces: CubeFace[]) => {
@@ -534,9 +565,15 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
             </div>
 
             {/* Flat Cube Assembly Grid - 5 wide, 2 high. Cubes completely flat and touching */}
-            <div className="w-full border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="grid grid-cols-5 gap-0 bg-white/5">
-                {cubes.map((c) => {
+            <div className="w-full border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">
+              <div 
+                className="grid grid-cols-5 gap-0 bg-white/5"
+                onMouseLeave={() => {
+                  setActiveHoverCellIndex(null);
+                  setActiveHoverPosition(null);
+                }}
+              >
+                {cubes.map((c, idx) => {
                   let placedFaceImage: string | null = null;
                   if (c.placedFaceId !== null) {
                     const matchedFace = c.faces.find(f => f.id === c.placedFaceId);
@@ -545,13 +582,130 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                     }
                   }
 
+                  const isSelected = selectedCubeNum === c.cubeNumber;
+
                   return (
                     <motion.div
                       key={c.cubeNumber}
-                      onClick={() => selectCubeForViewer(c.cubeNumber)}
+                      layout
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', String(c.cubeNumber));
+                        setDraggingCubeNumber(c.cubeNumber);
+                        setSelectedCubeNum(c.cubeNumber);
+                      }}
+                      onDragEnd={() => {
+                        setDraggingCubeNumber(null);
+                        setActiveHoverCellIndex(null);
+                        setActiveHoverPosition(null);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const relX = e.clientX - rect.left;
+                        const isLeft = relX < rect.width / 2;
+                        setActiveHoverCellIndex(idx);
+                        setActiveHoverPosition(isLeft ? 'before' : 'after');
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggingCubeNumber !== null) {
+                          const fromIndex = cubes.findIndex(item => item.cubeNumber === draggingCubeNumber);
+                          const toInsertIdx = activeHoverPosition === 'before' ? idx : idx + 1;
+                          moveCubeToInsertIndex(fromIndex, toInsertIdx);
+                        }
+                        setDraggingCubeNumber(null);
+                        setActiveHoverCellIndex(null);
+                        setActiveHoverPosition(null);
+                        setSelectedCubeNum(null);
+                      }}
+                      onMouseMove={(e) => {
+                        if (selectedCubeNum !== null && selectedCubeNum !== c.cubeNumber) {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const relX = e.clientX - rect.left;
+                          const isLeft = relX < rect.width / 2;
+                          setActiveHoverCellIndex(idx);
+                          setActiveHoverPosition(isLeft ? 'before' : 'after');
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        if (selectedCubeNum !== null) {
+                          setActiveHoverCellIndex(null);
+                          setActiveHoverPosition(null);
+                        }
+                      }}
+                      onClick={(e) => {
+                        // Click logic: select first, or insert if someone else is selected
+                        if (selectedCubeNum === null) {
+                          setSelectedCubeNum(c.cubeNumber);
+                        } else {
+                          if (selectedCubeNum === c.cubeNumber) {
+                            setSelectedCubeNum(null);
+                          } else {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const relX = e.clientX - rect.left;
+                            const isLeft = relX < rect.width / 2;
+                            const targetInsertIdx = isLeft ? idx : idx + 1;
+                            
+                            const fromIndex = cubes.findIndex(item => item.cubeNumber === selectedCubeNum);
+                            moveCubeToInsertIndex(fromIndex, targetInsertIdx);
+                            setSelectedCubeNum(null);
+                            setActiveHoverCellIndex(null);
+                            setActiveHoverPosition(null);
+                          }
+                        }
+                      }}
+                      onDoubleClick={() => {
+                        selectCubeForViewer(c.cubeNumber);
+                      }}
+                      onTouchStart={() => {
+                        touchStartRef.current = Date.now();
+                        longPressTimer.current = setTimeout(() => {
+                          setSelectedCubeNum(c.cubeNumber);
+                        }, 500);
+                      }}
+                      onTouchEnd={(e) => {
+                        if (longPressTimer.current) {
+                          clearTimeout(longPressTimer.current);
+                        }
+                        if (touchStartRef.current !== null) {
+                          const duration = Date.now() - touchStartRef.current;
+                          touchStartRef.current = null;
+                          if (duration < 350) {
+                            if (selectedCubeNum !== null) {
+                              if (selectedCubeNum === c.cubeNumber) {
+                                setSelectedCubeNum(null);
+                              } else {
+                                const touch = e.changedTouches[0];
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const relX = touch.clientX - rect.left;
+                                const isLeft = relX < rect.width / 2;
+                                const targetInsertIdx = isLeft ? idx : idx + 1;
+                                
+                                const fromIndex = cubes.findIndex(item => item.cubeNumber === selectedCubeNum);
+                                moveCubeToInsertIndex(fromIndex, targetInsertIdx);
+                                setSelectedCubeNum(null);
+                                setActiveHoverCellIndex(null);
+                                setActiveHoverPosition(null);
+                              }
+                            } else {
+                              setSelectedCubeNum(c.cubeNumber);
+                            }
+                          }
+                        }
+                      }}
+                      onTouchCancel={() => {
+                        if (longPressTimer.current) {
+                          clearTimeout(longPressTimer.current);
+                        }
+                      }}
                       whileHover={{ scale: 0.985 }}
-                      className="aspect-square bg-zinc-950 border border-white/10 flex items-center justify-center relative cursor-keypad group overflow-hidden cursor-pointer"
-                      title={`Configure Cube ${c.cubeNumber}`}
+                      className={`aspect-square bg-zinc-950 border flex items-center justify-center relative cursor-grab active:cursor-grabbing group overflow-hidden transition-all duration-300 ${
+                        isSelected
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/50 scale-95 z-20 shadow-[0_0_20px_rgba(16,185,129,0.5)]'
+                          : 'border-white/10 hover:border-[#D4AF37]/30'
+                      }`}
+                      title={`Double-click to open 3D view. Drag or click to reorder Cube ${c.cubeNumber}`}
                     >
                       {placedFaceImage ? (
                         <div className="w-full h-full p-0 relative flex items-center justify-center">
@@ -583,11 +737,33 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                         C{c.cubeNumber}
                       </div>
 
-                      {/* Diagnostic Overlay on hover */}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 select-none">
-                        <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-widest text-center">Load Cube {c.cubeNumber}</span>
-                        <span className="text-[8px] font-mono text-zinc-400 mt-1 uppercase">Adjust Angles ➜</span>
+                      {/* Moving ready / Selection Badge indicator */}
+                      {isSelected && (
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-emerald-950 border border-emerald-500 text-emerald-300 font-semibold text-[8px] font-mono tracking-wider rounded uppercase animate-bounce select-none">
+                          Ready to Move
+                        </div>
+                      )}
+
+                      {/* Interactive overlay instructions on hover */}
+                      <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 select-none text-center pointer-events-none">
+                        <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider">
+                          {selectedCubeNum === null ? "Move or Open" : "Insert Here"}
+                        </span>
+                        <span className="text-[8px] font-mono text-zinc-400 mt-1 uppercase">
+                          {selectedCubeNum === null 
+                            ? "Drag or click to move • Double-click to open" 
+                            : "Click/drop to place here"}
+                        </span>
                       </div>
+
+                      {/* Highlight boundary line (glow indicator showing insertion point) */}
+                      {activeHoverCellIndex === idx && (activeHoverPosition !== null) && (selectedCubeNum !== null || draggingCubeNumber !== null) && selectedCubeNum !== c.cubeNumber && (
+                        <div 
+                          className={`absolute top-0 bottom-0 w-1 bg-emerald-400 shadow-[0_0_12px_#10B981] z-30 pointer-events-none animate-pulse ${
+                            activeHoverPosition === 'before' ? 'left-0' : 'right-0'
+                          }`}
+                        />
+                      )}
                     </motion.div>
                   );
                 })}
@@ -606,8 +782,8 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                   {cubes.filter(c => c.placedFaceId !== null).length} / 10 Cubes Placed
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                Hint: Click on any cell above to preview, load textures, & rotate in 3D
+              <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-normal sm:tracking-widest">
+                Hint: Double-click a cube to open 3D Viewer & rotate. Single-click or long-press to pick up and move.
               </span>
             </div>
 
