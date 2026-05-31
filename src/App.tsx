@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion, AnimatePresence, animate } from 'motion/react';
-import { User, Plus, LogIn, ArrowRight, Tv, Pencil, Play, PlayCircle, History as HistoryIcon, ChevronLeft } from 'lucide-react';
+import { User, Plus, LogIn, ArrowRight, Tv, Pencil, Play, PlayCircle, History as HistoryIcon, ChevronLeft, Box } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CaesarCipherPage } from './components/CaesarCipherPage';
 import { CaesarGamePage } from './components/CaesarGamePage';
 import { AtlasCipherPage } from './components/AtlasCipherPage';
 import { AtlasGamePage } from './components/AtlasGamePage';
+import { AtlasCubePage } from './components/AtlasCubePage';
 import { CurrencyAuthenticator } from './components/CurrencyAuthenticator';
 import { RailFencePage } from './components/RailFencePage';
 import { RailFenceGamePage } from './components/RailFenceGamePage';
@@ -34,7 +35,7 @@ import { EnigmaPage } from './components/EnigmaPage';
 import { EnigmaGamePage } from './components/EnigmaGamePage';
 import { CipherHistoryPage } from './components/CipherHistoryPage';
 
-type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ADFGVX' | 'ADFGVX_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME' | 'ENIGMA_ENCODE' | 'ENIGMA_GAME' | 'CIPHER_HISTORY' | 'ATLAS_ENCODE' | 'ATLAS_GAME';
+type Screen = 'LOGIN' | 'PROFILE_SELECTION' | 'CREATE_PROFILE' | 'HOME' | 'EPISODE_DETAIL' | 'VIDEO_PLAYER' | 'CAESAR_WHEEL' | 'CAESAR_ENCODE' | 'CAESAR_GAME' | 'RAIL_FENCE' | 'RAIL_FENCE_GAME' | 'VIGENERE' | 'ADFGVX' | 'ADFGVX_GAME' | 'TRANSPOSITION' | 'TRANSPOSITION_GAME' | 'PLAYFAIR' | 'PLAYFAIR_GAME' | 'FOUR_SQUARE' | 'FOUR_SQUARE_GAME' | 'NIHILIST' | 'NIHILIST_GAME' | 'BIFID' | 'BIFID_GAME' | 'MORE_INFO_MENU' | 'ONE_DOLLAR_BILL' | 'PLAYERS_INFO' | 'LEADER_BOARD' | 'LEGAL' | 'EPISODE_SETTINGS' | 'VIGENERE_GAME' | 'ENIGMA_ENCODE' | 'ENIGMA_GAME' | 'CIPHER_HISTORY' | 'ATLAS_ENCODE' | 'ATLAS_GAME' | 'ATLAS_CUBE';
 
 interface Profile {
   id: string;
@@ -2143,7 +2144,7 @@ export default function App() {
               More Info
             </motion.h1>
             
-            <div className="flex gap-8">
+            <div className="flex flex-wrap gap-8 justify-center max-w-7xl px-4">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -2206,6 +2207,19 @@ export default function App() {
                 </div>
                 <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter relative z-10">Leader Board</h3>
               </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-[350px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
+                onClick={() => setCurrentScreen('ATLAS_CUBE')}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
+                <div className="w-20 h-20 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 relative z-10">
+                  <Box className="w-10 h-10 text-black animate-pulse" />
+                </div>
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter relative z-10">Atlas Cube</h3>
+              </motion.div>
             </div>
 
             <Button 
@@ -2216,6 +2230,13 @@ export default function App() {
               Back to Home
             </Button>
           </div>
+        );
+
+      case 'ATLAS_CUBE':
+        return (
+          <AtlasCubePage 
+            onBack={() => setCurrentScreen('MORE_INFO_MENU')} 
+          />
         );
 
       case 'ONE_DOLLAR_BILL':
