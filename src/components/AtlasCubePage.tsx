@@ -977,12 +977,38 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                  onTouchEnd={handleTouchEnd}>
               
               {/* Perspective Shield / Grid Plate */}
-              <div className="text-center absolute top-6 left-6 z-10 pointer-events-none text-left">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">
+              <div className="absolute top-6 left-6 z-30 text-left cursor-default select-none max-w-[calc(100%-120px)] sm:max-w-none">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
                   Virtual Environment
                 </span>
-                <span className="text-xs font-black text-[#D4AF37] uppercase tracking-widest block mt-0.5 animate-pulse">
-                  Cube {activeCubeNum} • {isViewerMode ? 'Primary Focused Core' : 'Live Projection'}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <span className="text-xs font-black text-[#D4AF37] uppercase tracking-widest block animate-pulse mt-0.5">
+                    Cube {activeCubeNum}
+                  </span>
+                  {/* Horizontal Button bar 1 to 10 for selecting active cube inside viewer */}
+                  <div className="flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                      <button
+                        key={num}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveCubeNum(num);
+                        }}
+                        className={`px-2.5 py-1 font-black text-[10px] rounded-md transition-all ${
+                          activeCubeNum === num
+                            ? 'bg-[#D4AF37] text-black shadow-md shadow-[#D4AF37]/20 scale-105 font-extrabold'
+                            : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-white/5'
+                        }`}
+                        id={`viewer-cube-selector-${num}`}
+                        title={`Switch 3D View to Cube ${num}`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-normal block mt-1.5 opacity-85">
+                  {isViewerMode ? 'Primary Focused Core' : 'Live Projection'}
                 </span>
               </div>
 

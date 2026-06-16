@@ -111,7 +111,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/PsZ7SKsP/Hullsome-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=6aGaPtSneg8",
     question: "What was the first number Hullsome found?",
-    jackpot: "$1,250,000",
+    jackpot: "$125,000",
     targetItem: "The Ring",
     targetItemImage: "https://i.ibb.co/SwMn1K8S/Ring.png",
     cipherName: "Caesar Cipher",
@@ -136,7 +136,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/wh2WxJj9/Chris-Ramsey-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=g5sZYv3edNE&t=313s",
     question: "What was the total number of Area 52 clues?",
-    jackpot: "$1,500,000",
+    jackpot: "$150,000",
     targetItem: "Drill",
     targetItemImage: "https://i.ibb.co/tTgrXWty/Drill.jpg",
     cipherName: "Rail Fence Cipher",
@@ -161,7 +161,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=71RjddPuSjs&t=227s",
     question: "How many items did Hafu Go find?",
-    jackpot: "$1,750,000",
+    jackpot: "$200,000",
     targetItem: "Endoscope",
     targetItemImage: "https://i.ibb.co/21ZbYtSL/Endo-Scope.jpg",
     cipherName: "Vigenère Cipher",
@@ -185,7 +185,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/jk08Mdk2/Brent-Rivera-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=Z5NtYq3i-mk",
     question: "What color was the Brent Rivera treasure box?",
-    jackpot: "$2,000,000",
+    jackpot: "$250,000",
     targetItem: "Impact driver",
     targetItemImage: "https://i.ibb.co/HTzpQjZK/Imapact-Driver.jpg",
     cipherName: "Enigma Cipher",
@@ -209,7 +209,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/PGyHJGw9/Faz-Rug-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=nstp6Xopi-Q",
     question: "Where did FaZe Rug find his final clue?",
-    jackpot: "$2,250,000",
+    jackpot: "$300,000",
     targetItem: "Headphones",
     targetItemImage: "https://i.ibb.co/xq6Fn1M3/Headphones.jpg",
     cipherName: "ADFGVX Cipher",
@@ -228,7 +228,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/4RYgg6K7/Zach-King-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=4V16xkpb9NE",
     question: "What magic trick did Zach King perform?!",
-    jackpot: "$2,500,000",
+    jackpot: "$350,000",
     targetItem: "Spray smoke",
     targetItemImage: "https://i.ibb.co/S4DnryVy/Smoke-Can.jpg",
     cipherName: "Transposition Cipher",
@@ -247,7 +247,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/NgmQbWKD/Mr-Beast-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=iogcY_4xGjo",
     question: "How many crew members were on the hunt with Mr. Beast?",
-    jackpot: "$2,750,000",
+    jackpot: "$400,000",
     targetItem: "Listening device",
     targetItemImage: "https://i.ibb.co/QLTn7NS/Listening-Device.jpg",
     cipherName: "Playfair Cipher",
@@ -266,7 +266,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/DPqstmGQ/Mark-Rober-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=pLtHyLlLt4Y&t=36s",
     question: "What scientific gadget did Mark Rober use first?",
-    jackpot: "$3,000,000",
+    jackpot: "$450,000",
     targetItem: "Stud Finder",
     targetItemImage: "https://i.ibb.co/ymf5qPTt/Stud-Finder.jpg",
     cipherName: "Four-Square Cipher",
@@ -285,7 +285,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/7xybRHT8/Dude-Perfect-TN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=dw-kwjzXSsA&t=335s",
     question: "Which Dude Perfect member found the first clue?",
-    jackpot: "$3,250,000",
+    jackpot: "$500,000",
     targetItem: "Key 1 (Solis)",
     targetItemImage: "https://i.ibb.co/shWyscy/Solis-Key.jpg",
     cipherName: "Nihilist Cipher",
@@ -304,7 +304,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/8nt16wTK/JSTUTN.png",
     DigitalCoinShort: "https://www.youtube.com/watch?v=XeraCWlYFwA",
     question: "How long did it take JSTU to reach the location?",
-    jackpot: "$3,500,000",
+    jackpot: "$550,000",
     targetItem: "Key 2 (Noctis)",
     targetItemImage: "https://i.ibb.co/rJhpLhD/Noctis-Key.jpg",
     cipherName: "Bifid Cipher",
@@ -323,7 +323,7 @@ const YOUTUBE_DATA: Youtuber[] = [
     DigitalCoinThumbNail: "https://i.ibb.co/Zz8ZMPTH/Ha-Fu-Go-TN.png",
     DigitalCoinShort: "https://www.youtube.com/",
     question: "Episode 11 Question TBD",
-    jackpot: "$3,750,000",
+    jackpot: "$600,000",
     targetItem: "TBD",
     targetItemImage: "https://i.ibb.co/rJhpLhD/Noctis-Key.jpg",
     cipherName: "Atlas Cipher",
@@ -466,6 +466,7 @@ const JackpotCounter = ({ value, sponsorLogo, sponsorName, sponsorHeight = "h-28
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('HOME');
+  const [atlasCubeBackScreen, setAtlasCubeBackScreen] = useState<Screen>('MORE_INFO_MENU');
   const [globalSerial, setGlobalSerial] = useState('L70191845K');
   const [profiles, setProfiles] = useState<Profile[]>(INITIAL_PROFILES);
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -556,8 +557,19 @@ export default function App() {
   useEffect(() => {
     if (currentScreen !== 'HOME') return;
 
-    const target = 1250000 + (movieFocusedIndex * 250000);
-    const startValue = target - 250000;
+    const getJackpotTarget = (index: number) => {
+      if (index === 0) return 125000;
+      if (index === 1) return 150000;
+      return 150000 + (index - 1) * 50000;
+    };
+
+    const getJackpotStart = (index: number) => {
+      if (index === 0) return 100000;
+      return getJackpotTarget(index - 1);
+    };
+
+    const target = getJackpotTarget(movieFocusedIndex);
+    const startValue = getJackpotStart(movieFocusedIndex);
     
     // Reset to start value briefly to ensure animation triggers
     setJackpotValue(startValue);
@@ -2212,7 +2224,10 @@ export default function App() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-[350px] aspect-video rounded-3xl bg-zinc-900 border-4 border-zinc-800 hover:border-[#D4AF37] transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
-                onClick={() => setCurrentScreen('ATLAS_CUBE')}
+                onClick={() => {
+                  setAtlasCubeBackScreen('MORE_INFO_MENU');
+                  setCurrentScreen('ATLAS_CUBE');
+                }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
                 <div className="w-20 h-20 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 relative z-10">
@@ -2235,7 +2250,9 @@ export default function App() {
       case 'ATLAS_CUBE':
         return (
           <AtlasCubePage 
-            onBack={() => setCurrentScreen('MORE_INFO_MENU')} 
+            onBack={() => {
+              setCurrentScreen(atlasCubeBackScreen);
+            }} 
           />
         );
 
@@ -3179,6 +3196,10 @@ export default function App() {
               setAtlasTargetShift(data.shift);
               setAtlasShift(data.shift); // Match the encoder shift
               setCurrentScreen('ATLAS_GAME');
+            }}
+            onGoToCube={() => {
+              setAtlasCubeBackScreen('ATLAS_ENCODE');
+              setCurrentScreen('ATLAS_CUBE');
             }}
           />
         );

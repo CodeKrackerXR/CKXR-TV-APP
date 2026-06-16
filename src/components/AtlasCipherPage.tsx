@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ASSETS } from '../constants';
 import { VaultButton } from './VaultButton';
-import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity } from 'lucide-react';
+import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box } from 'lucide-react';
 
 
 import { initializeApp } from 'firebase/app';
@@ -73,6 +73,7 @@ const handleFirestoreError = (error: unknown, operationType: OperationType, path
 interface AtlasCipherPageProps {
   onBack: () => void;
   onPlay?: (data: { code: string; shift: number }) => void;
+  onGoToCube?: () => void;
   youtuber?: {
     name: string;
     avatar: string;
@@ -125,7 +126,7 @@ const getRowPosLabel = (idx: number) => {
 };
 
 
-export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtuber, onPlay }) => {
+export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtuber, onPlay, onGoToCube }) => {
   const [inputText, setInputText] = useState('CODEKRACKER');
   const [shift, setShift] = useState(3);
   const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
@@ -580,6 +581,28 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
   return (
     <div className="min-h-screen w-full bg-[#0a0a0a] text-white font-sans overflow-x-hidden p-4 md:p-8">
+      {/* Navigation and Quick Links Bar */}
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 mb-8">
+        <button
+          onClick={onBack}
+          className="px-5 py-2.5 bg-zinc-900 border border-white/10 hover:border-[#D4AF37] text-zinc-400 hover:text-white rounded-xl transition-all font-black text-xs uppercase tracking-widest flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Episode
+        </button>
+
+        {onGoToCube && (
+          <button
+            onClick={onGoToCube}
+            className="px-5 py-2.5 bg-[#D4AF37]/10 border border-[#D4AF37]/35 hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] rounded-xl transition-all font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.15)] hover:scale-105 active:scale-95"
+            id="nav-to-atlas-cube-btn"
+          >
+            <Box className="w-4 h-4" />
+            Config Cube Faces & 3D
+          </button>
+        )}
+      </div>
+
       {/* Main Title */}
       <div className="w-full text-center mb-12">
          <h1 className="text-5xl md:text-8xl font-black text-[#D4AF37] tracking-[0.1em] uppercase drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">
