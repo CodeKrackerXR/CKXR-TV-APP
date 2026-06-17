@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ASSETS } from '../constants';
 import { VaultButton } from './VaultButton';
-import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check } from 'lucide-react';
+import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check, X } from 'lucide-react';
 
 
 import { initializeApp } from 'firebase/app';
@@ -107,8 +107,9 @@ const getShiftedLetter = (char: string, s: number) => {
 // Helper for Row and Position labels
 const getRowPosLabel = (idx: number) => {
   if (idx < 10) { // Live Map (Cubes 1-10, indices 0-9)
+    const level = idx < 5 ? 'L1' : 'L2';
     const row = idx < 5 ? 'T' : 'B';
-    return `L1${row}${idx + 1}`;
+    return `${level}${row}${idx + 1}`;
   }
   if (idx >= 10 && idx < 20) { // Decoy 1 (Cubes 11-20, indices 10-19)
     const row = idx < 15 ? 'T' : 'B';
@@ -149,7 +150,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             finalNumber: c.finalNumber || '', // Final Cube Face - Live Map only
             cipherOutput: c.cipherOutput || '',
             identificationLabel: c.identificationLabel || '',
-            riddleNumber: c.riddleNumber || ''
+            riddleNumber: c.riddleNumber || '',
+            riddle: c.riddle || ''          // Live Map only
           }));
         }
       } catch (e) {
@@ -163,7 +165,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       sponsorAd: '',   // Live Map only
       rotation: '',    // Live Map only
       finalLetter: '', // Final Cube Face - Live Map only
-      finalNumber: ''  // Final Cube Face - Live Map only
+      finalNumber: '', // Final Cube Face - Live Map only
+      riddle: ''       // Live Map only
     }));
   });
 
@@ -173,6 +176,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
   });
 
   const [selectedLetter, setSelectedLetter] = useState<string>('C');
+  const [activeRiddleEditIndex, setActiveRiddleEditIndex] = useState<number | null>(null);
+  const [tempRiddleText, setTempRiddleText] = useState<string>('');
 
   // Lazy initialize lastSavedSectionCubes to track dirty/saved states correctly
   const [lastSavedSectionCubes, setLastSavedSectionCubes] = useState<any[]>(() => {
@@ -188,7 +193,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             sponsorAd: c.sponsorAd || '',
             rotation: c.rotation || '',
             finalLetter: c.finalLetter || '',
-            finalNumber: c.finalNumber || ''
+            finalNumber: c.finalNumber || '',
+            riddle: c.riddle || ''
           }));
         }
       } catch (e) {
@@ -202,15 +208,16 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       sponsorAd: '',
       rotation: '',
       finalLetter: '',
-      finalNumber: ''
+      finalNumber: '',
+      riddle: ''
     }));
   });
 
   // Helper to determine if a section (from startIndex to startIndex + 10) is changed/dirty
   const isSectionDirty = (startIndex: number) => {
     for (let i = startIndex; i < startIndex + 10; i++) {
-      const curr = cubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' };
-      const saved = lastSavedSectionCubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' };
+      const curr = cubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '', riddle: '' };
+      const saved = lastSavedSectionCubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '', riddle: '' };
       if (
         (curr.letter || '') !== (saved.letter || '') ||
         (curr.number || '') !== (saved.number || '') ||
@@ -218,7 +225,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         (curr.sponsorAd || '') !== (saved.sponsorAd || '') ||
         (curr.rotation || '') !== (saved.rotation || '') ||
         (curr.finalLetter || '') !== (saved.finalLetter || '') ||
-        (curr.finalNumber || '') !== (saved.finalNumber || '')
+        (curr.finalNumber || '') !== (saved.finalNumber || '') ||
+        (curr.riddle || '') !== (saved.riddle || '')
       ) {
         return true;
       }
@@ -239,7 +247,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
           sponsorAd: curr.sponsorAd || '',
           rotation: curr.rotation || '',
           finalLetter: curr.finalLetter || '',
-          finalNumber: curr.finalNumber || ''
+          finalNumber: curr.finalNumber || '',
+          riddle: curr.riddle || ''
         };
       }
       return updated;
@@ -254,7 +263,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     const enrichedCubes = cubes.map((c, i) => {
       const shiftedL = getShiftedLetter(c.letter, shift);
       const shiftedN = getShiftedNumber(c.number, shift);
-      const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L1B${i - 4}` : `C${i + 1}`;
+      const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
       return {
         ...c,
         cipherOutput: `${shiftedL}${shiftedN}`,
@@ -322,7 +331,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     return cubes.slice(0, 10).every(c => c.letter !== '' && c.number !== '');
   }, [cubes]);
 
-  const handleCubeChange = (index: number, field: 'letter' | 'number' | 'episode' | 'sponsorAd' | 'rotation' | 'finalLetter' | 'finalNumber', value: string) => {
+  const handleCubeChange = (index: number, field: 'letter' | 'number' | 'episode' | 'sponsorAd' | 'rotation' | 'finalLetter' | 'finalNumber' | 'riddle', value: string) => {
     // Clear any active jump timer to prevent collision of timeouts
     if (jumpTimer.current) {
       clearTimeout(jumpTimer.current);
@@ -333,7 +342,10 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       const newCubes = [...prevCubes];
       const currentCube = { ...newCubes[index] };
       
-      if (field === 'letter') {
+      if (field === 'riddle') {
+        currentCube.riddle = value;
+        newCubes[index] = currentCube;
+      } else if (field === 'letter') {
         const cleanVal = value.toUpperCase().slice(0, 1).replace(/[^A-Z]/g, '');
         const prevVal = currentCube.letter;
         currentCube.letter = cleanVal;
@@ -464,7 +476,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     const enrichedCubes = cubes.map((c, i) => {
       const shiftedL = getShiftedLetter(c.letter, shift);
       const shiftedN = getShiftedNumber(c.number, shift);
-      const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L1B${i - 4}` : `C${i + 1}`;
+      const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
       return {
         ...c,
         cipherOutput: `${shiftedL}${shiftedN}`,
@@ -517,7 +529,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         sponsorAd: c.sponsorAd || '',
         rotation: c.rotation || '',
         finalLetter: c.finalLetter || '',
-        finalNumber: c.finalNumber || ''
+        finalNumber: c.finalNumber || '',
+        riddle: c.riddle || ''
       })));
 
       // 3. Save to Firebase
@@ -535,7 +548,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         const enrichedCubes = newCubes.map((c, i) => {
           const shiftedL = getShiftedLetter(c.letter, shift);
           const shiftedN = getShiftedNumber(c.number, shift);
-          const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L1B${i - 4}` : `C${i + 1}`;
+          const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
           return {
             ...c,
             cipherOutput: `${shiftedL}${shiftedN}`,
@@ -627,7 +640,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
               const shiftedL = getShiftedLetter(cube.letter, shift);
               const shiftedN = getShiftedNumber(cube.number, shift);
               const code = `${shiftedL}${shiftedN}`;
-              const isDuplicate = cube.letter && cube.number && duplicateOutputs.has(code);
+              const isDuplicate = startIndex === 0 ? false : !!(cube.letter && cube.number && duplicateOutputs.has(code));
               const rowPosLabel = getRowPosLabel(idx);
               const isLiveMap = startIndex === 0;
               const isDecoy5 = startIndex === 50;
@@ -687,10 +700,26 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                          />
                        </div>
                        <div className="flex flex-col gap-2">
-                         <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Riddle</span>
-                         <div className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white font-mono select-none">
-                           Riddle {idx + 1}
+                         <div className="flex items-center gap-2 ml-1">
+                           <span className={`w-2.5 h-2.5 rounded-full ${
+                             !cube.riddle || cube.riddle.trim() === ''
+                               ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse'
+                               : cube.riddle === (lastSavedSectionCubes[idx]?.riddle || '')
+                                 ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,148,0.6)]'
+                                 : 'bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                           }`} />
+                           <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em]">Riddle</span>
                          </div>
+                         <button
+                           type="button"
+                           onClick={() => {
+                             setActiveRiddleEditIndex(idx);
+                             setTempRiddleText(cube.riddle || '');
+                           }}
+                           className="w-full bg-[#f1c40f]/10 border border-[#f1c40f]/40 hover:bg-[#f1c40f]/20 hover:border-[#f1c40f] rounded-xl p-3 text-center font-black text-xl text-[#f1c40f] font-mono transition-all duration-200 cursor-pointer active:scale-[0.98]"
+                         >
+                           Riddle {idx + 1}
+                         </button>
                        </div>
                        <div className="flex flex-col gap-2">
                          <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Sponsor Ad</span>
@@ -1020,6 +1049,70 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       {renderCubeSection("Decoy 3", 30)}
       {renderCubeSection("Decoy 4", 40)}
       {renderCubeSection("Decoy 5", 50)}
+
+      {activeRiddleEditIndex !== null && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 animate-fade-in"
+          onClick={() => setActiveRiddleEditIndex(null)}
+        >
+          <div 
+            className="bg-[#0e0e0e] border-2 border-[#D4AF37] rounded-[2rem] w-full max-w-3xl p-8 relative flex flex-col gap-6 shadow-[0_0_50px_rgba(212,175,55,0.25)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#f1c40f] animate-pulse" />
+                <h3 className="text-xl font-black text-white uppercase tracking-wider font-sans">
+                  Riddle {activeRiddleEditIndex + 1}
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setActiveRiddleEditIndex(null)}
+                className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/5"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Instruction Description */}
+            <div className="text-xs text-white/50 leading-relaxed font-sans">
+              Type in the full riddle for Cube {activeRiddleEditIndex + 1}. You can enter multiple sentences or separate paragraphs as needed.
+            </div>
+
+            {/* Input Textarea */}
+            <textarea
+              value={tempRiddleText}
+              onChange={(e) => setTempRiddleText(e.target.value)}
+              placeholder="Start typing your riddle here..."
+              rows={14}
+              className="w-full bg-black/60 border border-white/10 rounded-2xl p-4 font-mono text-white text-base focus:outline-none focus:border-[#D4AF37] transition-all placeholder:text-white/20 leading-relaxed resize-y"
+            />
+
+            {/* Buttons / Actions */}
+            <div className="flex gap-3 justify-end pt-2 border-t border-white/5">
+              <button
+                type="button"
+                onClick={() => setActiveRiddleEditIndex(null)}
+                className="px-5 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 font-bold uppercase text-[11px] tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleCubeChange(activeRiddleEditIndex, 'riddle', tempRiddleText);
+                  setActiveRiddleEditIndex(null);
+                }}
+                className="px-6 py-2.5 rounded-xl bg-[#D4AF37] text-black font-extrabold uppercase text-[11.5px] tracking-widest hover:bg-[#D4AF37]/90 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+              >
+                Apply Riddle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

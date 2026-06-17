@@ -120,7 +120,7 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
 
         setStage2NewCode(cipherCode);
         setStage2Episode("Episode " + (matchedCube.episode || ""));
-        setStage2Riddle("Riddle " + (matchedCube.riddleNumber || ""));
+        setStage2Riddle(matchedCube.riddle || ("Riddle " + (matchedCube.riddleNumber || "")));
         
         // Also populate Stage 3 New Code but keep extra info hidden
         setStage3NewCode(cipherCode);
@@ -946,10 +946,20 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                     </div>
                     <div className="space-y-3">
                       <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">Riddle</label>
-                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 flex items-center justify-center">
-                        <span className="text-3xl font-black text-white tracking-widest uppercase">
-                          {stage2Riddle || "---"}
-                        </span>
+                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 min-h-[5.5rem] flex items-center justify-center">
+                        {stage2Riddle ? (
+                          stage2Riddle.startsWith("Riddle ") && stage2Riddle.length < 11 ? (
+                            <span className="text-3xl font-black text-white tracking-widest uppercase text-center">
+                              {stage2Riddle}
+                            </span>
+                          ) : (
+                            <div className="text-base text-gray-200 select-text font-medium leading-relaxed text-center whitespace-pre-wrap max-w-lg">
+                              {stage2Riddle}
+                            </div>
+                          )
+                        ) : (
+                          <span className="text-3xl font-black text-white tracking-widest uppercase text-center">---</span>
+                        )}
                       </div>
                     </div>
                   </div>
