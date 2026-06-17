@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ASSETS } from '../constants';
 import { VaultButton } from './VaultButton';
-import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box } from 'lucide-react';
+import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check } from 'lucide-react';
 
 
 import { initializeApp } from 'firebase/app';
@@ -128,35 +128,110 @@ const getRowPosLabel = (idx: number) => {
 
 export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtuber, onPlay, onGoToCube }) => {
   const [inputText, setInputText] = useState('CODEKRACKER');
-  const [shift, setShift] = useState(3);
   const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
   
   const [isSaving, setIsSaving] = useState(false);
 
-  // New state for 60 cubes (Live Map + 5 Decoy sections)
-  const [cubes, setCubes] = useState(Array.from({ length: 60 }, () => ({ 
-    letter: '', 
-    number: '',
-    episode: '',     // Live Map only
-    sponsorAd: '',   // Live Map only
-    rotation: ''     // Live Map only
-  })));
-
-  // Load from localStorage on mount
-  useEffect(() => {
+  // Lazy initialize 60 cubes
+  const [cubes, setCubes] = useState<any[]>(() => {
     const savedCubes = localStorage.getItem('atlas_session_cubes');
-    const savedShift = localStorage.getItem('atlas_session_shift');
     if (savedCubes) {
       try {
-        setCubes(JSON.parse(savedCubes));
+        const parsed = JSON.parse(savedCubes);
+        if (Array.isArray(parsed) && parsed.length === 60) {
+          return parsed.map((c: any) => ({
+            letter: c.letter || '',
+            number: c.number || '',
+            episode: c.episode || '',     // Live Map only
+            sponsorAd: c.sponsorAd || '',   // Live Map only
+            rotation: c.rotation || '',     // Live Map only
+            cipherOutput: c.cipherOutput || '',
+            identificationLabel: c.identificationLabel || '',
+            riddleNumber: c.riddleNumber || ''
+          }));
+        }
       } catch (e) {
         console.error("Failed to parse saved cubes", e);
       }
     }
-    if (savedShift) {
-      setShift(parseInt(savedShift));
+    return Array.from({ length: 60 }, () => ({ 
+      letter: '', 
+      number: '',
+      episode: '',     // Live Map only
+      sponsorAd: '',   // Live Map only
+      rotation: ''     // Live Map only
+    }));
+  });
+
+  const [shift, setShift] = useState<number>(() => {
+    const savedShift = localStorage.getItem('atlas_session_shift');
+    return savedShift ? parseInt(savedShift) : 3;
+  });
+
+  // Lazy initialize lastSavedSectionCubes to track dirty/saved states correctly
+  const [lastSavedSectionCubes, setLastSavedSectionCubes] = useState<any[]>(() => {
+    const savedCubes = localStorage.getItem('atlas_session_cubes');
+    if (savedCubes) {
+      try {
+        const parsed = JSON.parse(savedCubes);
+        if (Array.isArray(parsed) && parsed.length === 60) {
+          return parsed.map((c: any) => ({
+            letter: c.letter || '',
+            number: c.number || '',
+            episode: c.episode || '',
+            sponsorAd: c.sponsorAd || '',
+            rotation: c.rotation || ''
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to parse saved cubes for dirty tracker", e);
+      }
     }
-  }, []);
+    return Array.from({ length: 60 }, () => ({ 
+      letter: '', 
+      number: '',
+      episode: '',
+      sponsorAd: '',
+      rotation: ''
+    }));
+  });
+
+  // Helper to determine if a section (from startIndex to startIndex + 10) is changed/dirty
+  const isSectionDirty = (startIndex: number) => {
+    for (let i = startIndex; i < startIndex + 10; i++) {
+      const curr = cubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '' };
+      const saved = lastSavedSectionCubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '' };
+      if (
+        (curr.letter || '') !== (saved.letter || '') ||
+        (curr.number || '') !== (saved.number || '') ||
+        (curr.episode || '') !== (saved.episode || '') ||
+        (curr.sponsorAd || '') !== (saved.sponsorAd || '') ||
+        (curr.rotation || '') !== (saved.rotation || '')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Handler to save a specific section's info locally
+  const handleSaveSection = (startIndex: number) => {
+    setLastSavedSectionCubes(prev => {
+      const updated = [...prev];
+      for (let i = startIndex; i < startIndex + 10; i++) {
+        const curr = cubes[i];
+        updated[i] = {
+          letter: curr.letter || '',
+          number: curr.number || '',
+          episode: curr.episode || '',
+          sponsorAd: curr.sponsorAd || '',
+          rotation: curr.rotation || ''
+        };
+      }
+      return updated;
+    });
+    saveToLocalStorage();
+  };
 
   // Autosave to localStorage whenever cubes or shift change
   useEffect(() => {
@@ -234,6 +309,12 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
   }, [cubes]);
 
   const handleCubeChange = (index: number, field: 'letter' | 'number' | 'episode' | 'sponsorAd' | 'rotation', value: string) => {
+    // Clear any active jump timer to prevent collision of timeouts
+    if (jumpTimer.current) {
+      clearTimeout(jumpTimer.current);
+      jumpTimer.current = null;
+    }
+
     setCubes(prevCubes => {
       const newCubes = [...prevCubes];
       const currentCube = { ...newCubes[index] };
@@ -251,7 +332,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         
         // Auto jump to number field only if we added a character
         if (cleanVal !== '' && cleanVal !== prevVal) {
-          setTimeout(() => cubeRefs.current[index].number?.focus(), 0);
+          setTimeout(() => {
+            cubeRefs.current[index]?.number?.focus();
+          }, 0);
         }
       } else if (field === 'number') {
         const val = value.replace(/[^0-9]/g, '');
@@ -266,50 +349,87 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             newCubes[index + 50] = { ...newCubes[index + 50], number: val };
           }
 
-          if (jumpTimer.current) {
-            clearTimeout(jumpTimer.current);
-            jumpTimer.current = null;
-          }
-
-          const getNextIndex = (curr: number) => {
-            if (curr % 5 === 0) return curr + 9;
-            return curr - 1;
-          };
-
-          const doJump = () => {
-            const nextIdx = getNextIndex(index);
-            if (nextIdx < 60) {
-              cubeRefs.current[nextIdx]?.letter?.focus();
-            }
-          };
-
           if (val !== '' && val !== prevVal) {
-            if (val === '1') {
-              jumpTimer.current = setTimeout(() => {
-                doJump();
-                jumpTimer.current = null;
-              }, 400);
+            if (index < 10) {
+              // Live Map: stay in current cube and focus 'episode'
+              if (val === '1') {
+                jumpTimer.current = setTimeout(() => {
+                  cubeRefs.current[index]?.episode?.focus();
+                  jumpTimer.current = null;
+                }, 400);
+              } else {
+                setTimeout(() => {
+                  cubeRefs.current[index]?.episode?.focus();
+                }, 0);
+              }
             } else {
-              doJump();
+              // Decoys: advance to next cube's letter
+              const focusNext = () => {
+                const nextIdx = index + 1;
+                if (nextIdx < 60) {
+                  cubeRefs.current[nextIdx]?.letter?.focus();
+                }
+              };
+              if (val === '1') {
+                jumpTimer.current = setTimeout(() => {
+                  focusNext();
+                  jumpTimer.current = null;
+                }, 400);
+              } else {
+                setTimeout(focusNext, 0);
+              }
             }
           }
         }
       } else if (field === 'episode' || field === 'sponsorAd') {
         const val = value.replace(/[^0-9]/g, '');
+        const prevVal = currentCube[field];
         const num = parseInt(val);
         if (val === '' || (num >= 1 && num <= 10)) {
           currentCube[field] = val;
           newCubes[index] = currentCube;
+
+          if (val !== '' && val !== prevVal) {
+            const nextField = field === 'episode' ? 'sponsorAd' : 'rotation';
+            if (val === '1') {
+              jumpTimer.current = setTimeout(() => {
+                cubeRefs.current[index]?.[nextField]?.focus();
+                jumpTimer.current = null;
+              }, 400);
+            } else {
+              setTimeout(() => {
+                cubeRefs.current[index]?.[nextField]?.focus();
+              }, 0);
+            }
+          }
         }
       } else if (field === 'rotation') {
         // More resilient rotation input: allow typing digits and validate values
         const val = value.replace(/[^0-9]/g, '');
+        const prevVal = currentCube.rotation;
         const num = parseInt(val);
         
         // Allow typing any digits as long as they could lead to a valid degree or stay within reasonable bounds
         if (val === '' || (num >= 0 && num <= 360)) {
           currentCube.rotation = val;
           newCubes[index] = currentCube;
+
+          if (val !== '' && val !== prevVal) {
+            const focusNextCube = () => {
+              const nextIdx = index + 1;
+              if (nextIdx < 60) {
+                cubeRefs.current[nextIdx]?.letter?.focus();
+              }
+            };
+            if (val.length === 3 || ['0', '90', '180', '270'].includes(val)) {
+              setTimeout(focusNextCube, 0);
+            } else {
+              jumpTimer.current = setTimeout(() => {
+                focusNextCube();
+                jumpTimer.current = null;
+              }, 600);
+            }
+          }
         }
       }
       
@@ -368,6 +488,13 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       }
       
       setCubes(newCubes);
+      setLastSavedSectionCubes(newCubes.map((c) => ({
+        letter: c.letter || '',
+        number: c.number || '',
+        episode: c.episode || '',
+        sponsorAd: c.sponsorAd || '',
+        rotation: c.rotation || ''
+      })));
 
       // 3. Save to Firebase
       const { db: firestore, auth: firebaseAuth } = await initFirebase();
@@ -436,9 +563,37 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
               <Activity className="w-8 h-8 text-[#D4AF37]" />
               {title}
             </h3>
-            <div className="flex items-center gap-3 bg-[#22c55e]/10 border border-[#22c55e]/30 px-6 py-3 rounded-xl">
-               <span className="text-[10px] font-black text-[#22c55e]/60 uppercase tracking-widest">Key Ref</span>
-               <span className="text-3xl font-black text-[#22c55e] italic leading-none">C{shift}</span>
+            
+            {/* Controls Row: Key Ref + Save Info Button */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-3 bg-[#22c55e]/10 border border-[#22c55e]/30 px-6 py-3 rounded-xl select-none">
+                 <span className="text-[10px] font-black text-[#22c55e]/60 uppercase tracking-widest">Key Ref</span>
+                 <span className="text-3xl font-black text-[#22c55e] italic leading-none">C{shift}</span>
+              </div>
+
+              <button
+                onClick={() => handleSaveSection(startIndex)}
+                className={`px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 flex items-center gap-2.5 shadow-lg select-none ${
+                  isSectionDirty(startIndex)
+                    ? 'bg-red-500/15 border-2 border-red-500/50 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer'
+                    : 'bg-emerald-500/10 border-2 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.08)] cursor-default'
+                }`}
+                disabled={!isSectionDirty(startIndex)}
+                id={`save-section-btn-${startIndex}`}
+                title={isSectionDirty(startIndex) ? `Save Changes in ${title}` : `All Changes Saved in ${title}`}
+              >
+                {isSectionDirty(startIndex) ? (
+                  <>
+                    <Save className="w-4 h-4 animate-pulse text-red-500 group-hover:text-white" />
+                    <span>Save Info</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>Saved</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
