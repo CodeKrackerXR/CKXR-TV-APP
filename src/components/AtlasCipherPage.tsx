@@ -145,6 +145,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             episode: c.episode || '',     // Live Map only
             sponsorAd: c.sponsorAd || '',   // Live Map only
             rotation: c.rotation || '',     // Live Map only
+            finalLetter: c.finalLetter || '', // Final Cube Face - Live Map only
+            finalNumber: c.finalNumber || '', // Final Cube Face - Live Map only
             cipherOutput: c.cipherOutput || '',
             identificationLabel: c.identificationLabel || '',
             riddleNumber: c.riddleNumber || ''
@@ -159,7 +161,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       number: '',
       episode: '',     // Live Map only
       sponsorAd: '',   // Live Map only
-      rotation: ''     // Live Map only
+      rotation: '',    // Live Map only
+      finalLetter: '', // Final Cube Face - Live Map only
+      finalNumber: ''  // Final Cube Face - Live Map only
     }));
   });
 
@@ -167,6 +171,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     const savedShift = localStorage.getItem('atlas_session_shift');
     return savedShift ? parseInt(savedShift) : 3;
   });
+
+  const [selectedLetter, setSelectedLetter] = useState<string>('C');
 
   // Lazy initialize lastSavedSectionCubes to track dirty/saved states correctly
   const [lastSavedSectionCubes, setLastSavedSectionCubes] = useState<any[]>(() => {
@@ -180,7 +186,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             number: c.number || '',
             episode: c.episode || '',
             sponsorAd: c.sponsorAd || '',
-            rotation: c.rotation || ''
+            rotation: c.rotation || '',
+            finalLetter: c.finalLetter || '',
+            finalNumber: c.finalNumber || ''
           }));
         }
       } catch (e) {
@@ -192,21 +200,25 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       number: '',
       episode: '',
       sponsorAd: '',
-      rotation: ''
+      rotation: '',
+      finalLetter: '',
+      finalNumber: ''
     }));
   });
 
   // Helper to determine if a section (from startIndex to startIndex + 10) is changed/dirty
   const isSectionDirty = (startIndex: number) => {
     for (let i = startIndex; i < startIndex + 10; i++) {
-      const curr = cubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '' };
-      const saved = lastSavedSectionCubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '' };
+      const curr = cubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' };
+      const saved = lastSavedSectionCubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' };
       if (
         (curr.letter || '') !== (saved.letter || '') ||
         (curr.number || '') !== (saved.number || '') ||
         (curr.episode || '') !== (saved.episode || '') ||
         (curr.sponsorAd || '') !== (saved.sponsorAd || '') ||
-        (curr.rotation || '') !== (saved.rotation || '')
+        (curr.rotation || '') !== (saved.rotation || '') ||
+        (curr.finalLetter || '') !== (saved.finalLetter || '') ||
+        (curr.finalNumber || '') !== (saved.finalNumber || '')
       ) {
         return true;
       }
@@ -225,7 +237,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
           number: curr.number || '',
           episode: curr.episode || '',
           sponsorAd: curr.sponsorAd || '',
-          rotation: curr.rotation || ''
+          rotation: curr.rotation || '',
+          finalLetter: curr.finalLetter || '',
+          finalNumber: curr.finalNumber || ''
         };
       }
       return updated;
@@ -308,7 +322,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     return cubes.slice(0, 10).every(c => c.letter !== '' && c.number !== '');
   }, [cubes]);
 
-  const handleCubeChange = (index: number, field: 'letter' | 'number' | 'episode' | 'sponsorAd' | 'rotation', value: string) => {
+  const handleCubeChange = (index: number, field: 'letter' | 'number' | 'episode' | 'sponsorAd' | 'rotation' | 'finalLetter' | 'finalNumber', value: string) => {
     // Clear any active jump timer to prevent collision of timeouts
     if (jumpTimer.current) {
       clearTimeout(jumpTimer.current);
@@ -336,6 +350,14 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             cubeRefs.current[index]?.number?.focus();
           }, 0);
         }
+      } else if (field === 'finalLetter') {
+        const cleanVal = value.toUpperCase().slice(0, 1).replace(/[^A-Z]/g, '');
+        currentCube.finalLetter = cleanVal;
+        newCubes[index] = currentCube;
+      } else if (field === 'finalNumber') {
+        const val = value.replace(/[^0-9]/g, '').slice(0, 2);
+        currentCube.finalNumber = val;
+        newCubes[index] = currentCube;
       } else if (field === 'number') {
         const val = value.replace(/[^0-9]/g, '');
         const prevVal = currentCube.number;
@@ -493,7 +515,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         number: c.number || '',
         episode: c.episode || '',
         sponsorAd: c.sponsorAd || '',
-        rotation: c.rotation || ''
+        rotation: c.rotation || '',
+        finalLetter: c.finalLetter || '',
+        finalNumber: c.finalNumber || ''
       })));
 
       // 3. Save to Firebase
@@ -568,7 +592,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-3 bg-[#22c55e]/10 border border-[#22c55e]/30 px-6 py-3 rounded-xl select-none">
                  <span className="text-[10px] font-black text-[#22c55e]/60 uppercase tracking-widest">Key Ref</span>
-                 <span className="text-3xl font-black text-[#22c55e] italic leading-none">C{shift}</span>
+                 <span className="text-3xl font-black text-[#22c55e] italic leading-none">{selectedLetter}{shift}</span>
               </div>
 
               <button
@@ -708,9 +732,42 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                           </span>
                         </div>
                       )}
+
+                      {isLiveMap && (
+                        <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
+                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#D4AF37]/60 text-center">
+                            Final Cube Face
+                          </span>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-2">
+                              <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Letter</span>
+                              <input
+                                type="text"
+                                value={cube.finalLetter || ''}
+                                onChange={(e) => handleCubeChange(idx, 'finalLetter', e.target.value)}
+                                placeholder="A"
+                                maxLength={1}
+                                className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Number</span>
+                              <input
+                                type="text"
+                                value={cube.finalNumber || ''}
+                                onChange={(e) => handleCubeChange(idx, 'finalNumber', e.target.value)}
+                                placeholder="1-10"
+                                maxLength={2}
+                                className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {rowPosLabel && (
                          <div className="flex flex-col items-center justify-center pt-2">
-                            <span className="text-[8px] font-black text-white/10 uppercase tracking-[0.4em] mb-2">Identification Label</span>
+                            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Cube Position</span>
                             <div className="text-2xl font-black text-[#D4AF37] tracking-[0.2em] drop-shadow-[0_0_10px_rgba(212,175,55,0.2)]">
                               {rowPosLabel}
                             </div>
@@ -835,7 +892,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
               </p>
               <div className="p-3 bg-black/40 border border-white/5 rounded-lg">
                 <div className="text-[9px] text-[#D4AF37] font-black uppercase mb-1">Current Key Reference</div>
-                <div className="text-xl font-black text-white italic">C{shift}</div>
+                <div className="text-xl font-black text-white italic">{selectedLetter}{shift}</div>
               </div>
             </div>
           </div>
@@ -851,17 +908,31 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
             <div className="bg-black/40 rounded-2xl p-6 border border-white/5 mb-8">
               <div className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide font-mono">
-                {ALPHABET.map((l, i) => (
-                  <div key={i} className="flex flex-col items-center gap-3 min-w-[32px]">
-                    <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs font-bold text-white/40">
-                      {l}
+                {ALPHABET.map((l, i) => {
+                  const isSelected = l === selectedLetter;
+                  return (
+                    <div key={i} className="flex flex-col items-center gap-3 min-w-[32px]">
+                      <button
+                        onClick={() => {
+                          setSelectedLetter(l);
+                          setInputText(prev => prev ? prev + l : l);
+                        }}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-white text-black border-2 border-white shadow-[0_0_15px_rgba(255,255,255,0.4)]'
+                            : 'bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 hover:text-white'
+                        }`}
+                        title={`Select letter ${l} to shift from`}
+                      >
+                        {l}
+                      </button>
+                      <div className="text-[#D4AF37] text-[10px]">&darr;</div>
+                      <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                        {mapping[l]}
+                      </div>
                     </div>
-                    <div className="text-[#D4AF37] text-[10px]">&darr;</div>
-                    <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-xs font-black text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.1)]">
-                      {mapping[l]}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -874,11 +945,11 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                  <div className="space-y-6">
                    <div className="flex justify-between items-center text-sm font-black uppercase tracking-widest">
                      <span className="text-white/40">Plaintext</span>
-                     <span className="text-white text-lg">A</span>
+                     <span className="text-white text-lg">{selectedLetter}</span>
                    </div>
                    <div className="flex justify-between items-center text-sm font-black uppercase tracking-widest">
                      <span className="text-[#D4AF37]/40">Mapped Letter</span>
-                     <span className="text-[#D4AF37] text-3xl">{mapping['A']}</span>
+                     <span className="text-[#D4AF37] text-3xl">{mapping[selectedLetter]}</span>
                    </div>
                    <div className="h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/5">
                      <motion.div
