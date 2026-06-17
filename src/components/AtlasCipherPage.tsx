@@ -655,14 +655,14 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                     {isDuplicate && (
                       <div className={`flex items-center gap-1 animate-pulse mt-2 px-3 py-1 rounded-full border ${isGoldHighlight ? 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
                         <Info className="w-3 h-3" />
-                        <span className="text-[9px] font-black uppercase tracking-wider">Collision</span>
+                        <span className="text-[11px] font-black uppercase tracking-wider">Collision</span>
                       </div>
                     )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                      <div className="flex flex-col gap-2">
-                       <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Letter</span>
+                       <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1">Letter</span>
                        <input
                          type="text"
                          ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].letter = el; }}
@@ -674,7 +674,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                        />
                      </div>
                      <div className="flex flex-col gap-2">
-                       <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Number</span>
+                       <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1">Number</span>
                        <input
                          type="text"
                          ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].number = el; }}
@@ -689,7 +689,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                   {isLiveMap && (
                     <div className="grid grid-cols-1 gap-4 mt-2">
                        <div className="flex flex-col gap-2">
-                         <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Episode</span>
+                         <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Episode</span>
                          <input
                            type="text"
                            ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].episode = el; }}
@@ -708,7 +708,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                                  ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,148,0.6)]'
                                  : 'bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.6)]'
                            }`} />
-                           <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em]">Riddle</span>
+                           <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em]">Riddle</span>
                          </div>
                          <button
                            type="button"
@@ -722,7 +722,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                          </button>
                        </div>
                        <div className="flex flex-col gap-2">
-                         <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Sponsor Ad</span>
+                         <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Sponsor Ad</span>
                          <input
                            type="text"
                            ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].sponsorAd = el; }}
@@ -733,7 +733,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                          />
                        </div>
                        <div className="flex flex-col gap-2 relative">
-                         <span className="text-[9px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Rotation</span>
+                         <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Rotation</span>
                          <div className="relative">
                            <input
                              type="text"
@@ -755,8 +755,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                     <div className="mt-2 flex flex-col gap-5 p-6 bg-black/60 rounded-3xl border border-white/5 shadow-inner group-hover:bg-black/80 transition-all">
                       {isLiveMap && (
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 leading-tight">Cipher<br/>Output:</span>
-                          <span className={`text-4xl font-black font-mono tracking-widest italic ${isDuplicate ? (isGoldHighlight ? 'text-[#D4AF37]' : 'text-red-500') : 'text-[#D4AF37]'}`}>
+                           <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 leading-tight">Cipher<br/>Output:</span>
+                           <span className={`text-4xl font-black font-mono tracking-widest italic ${isDuplicate ? (isGoldHighlight ? 'text-[#D4AF37]' : 'text-red-500') : 'text-[#D4AF37]'}`}>
                             {shiftedL || '-'}{shiftedN || '-'}
                           </span>
                         </div>
@@ -764,12 +764,12 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
                       {isLiveMap && (
                         <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
-                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#D4AF37]/60 text-center">
+                           <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#D4AF37]/60 text-center">
                             Final Cube Face
                           </span>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col gap-2">
-                              <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Letter</span>
+                               <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Letter</span>
                               <input
                                 type="text"
                                 value={cube.finalLetter || ''}
@@ -780,7 +780,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                               />
                             </div>
                             <div className="flex flex-col gap-2">
-                              <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Number</span>
+                               <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Number</span>
                               <input
                                 type="text"
                                 value={cube.finalNumber || ''}
@@ -796,7 +796,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
                       {rowPosLabel && (
                          <div className="flex flex-col items-center justify-center pt-2">
-                            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Cube Position</span>
+                            <span className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Cube Position</span>
                             <div className="text-2xl font-black text-[#D4AF37] tracking-[0.2em] drop-shadow-[0_0_10px_rgba(212,175,55,0.2)]">
                               {rowPosLabel}
                             </div>

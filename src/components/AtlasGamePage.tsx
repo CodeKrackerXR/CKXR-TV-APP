@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { ASSETS } from "../constants";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 
 interface AtlasGamePageProps {
   onBack: () => void;
@@ -79,6 +79,7 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
   const [stage2NewCode, setStage2NewCode] = useState("");
   const [stage2Episode, setStage2Episode] = useState("");
   const [stage2Riddle, setStage2Riddle] = useState("");
+  const [isRiddleModalOpen, setIsRiddleModalOpen] = useState(false);
   const [stage3NewCode, setStage3NewCode] = useState("");
   const [stage3SponsorAd, setStage3SponsorAd] = useState("");
   const [stage3Position, setStage3Position] = useState("");
@@ -946,7 +947,20 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                     </div>
                     <div className="space-y-3">
                       <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block text-center">Riddle</label>
-                      <div className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 min-h-[5.5rem] flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (stage2Riddle) {
+                            setIsRiddleModalOpen(true);
+                          }
+                        }}
+                        disabled={!stage2Riddle}
+                        className={`w-full bg-black/60 border border-white/10 rounded-2xl p-6 min-h-[5.5rem] flex items-center justify-center transition-all duration-200 outline-none ${
+                          stage2Riddle
+                            ? 'cursor-pointer hover:bg-black/80 hover:border-[#D4AF37]/40 ring-offset-black hover:scale-[1.01] active:scale-[0.99] focus:ring-2 focus:ring-[#D4AF37]/50'
+                            : 'opacity-60 cursor-default'
+                        }`}
+                      >
                         {stage2Riddle ? (
                           stage2Riddle.startsWith("Riddle ") && stage2Riddle.length < 11 ? (
                             <span className="text-3xl font-black text-white tracking-widest uppercase text-center">
@@ -960,7 +974,7 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                         ) : (
                           <span className="text-3xl font-black text-white tracking-widest uppercase text-center">---</span>
                         )}
-                      </div>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1004,6 +1018,76 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
           &copy; 2026 CODE KRACKER XR • ATLAS PROTOCOL
         </p>
       </div>
+
+      {/* Expanded Riddle Modal Pop-up */}
+      {isRiddleModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[100] p-4"
+          onClick={() => setIsRiddleModalOpen(false)}
+        >
+          <div 
+            className="bg-[#0e0e0e] border-2 border-[#D4AF37] rounded-[2.5rem] w-full max-w-2xl p-8 relative flex flex-col gap-6 shadow-[0_0_60px_rgba(212,175,55,0.3)] animate-in fade-in zoom-in duration-200 select-text"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button top right */}
+            <button
+              type="button"
+              onClick={() => setIsRiddleModalOpen(false)}
+              className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors cursor-pointer p-2 rounded-full hover:bg-white/5"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Riddle Header */}
+            <div className="text-center pt-2">
+              <span className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.5em] block mb-1">Riddle Review</span>
+              <span className="text-xs text-white/40 uppercase tracking-[0.2em]">Atlas Wheel Stage 2</span>
+            </div>
+
+            {/* Info Grid: New Code & Episode Info */}
+            <div className="grid grid-cols-2 gap-4 border-y border-white/5 py-6">
+              <div className="text-center bg-black/40 border border-white/5 rounded-2xl p-4">
+                <span className="text-[10px] font-black text-[#D4AF37]/60 uppercase tracking-[0.2em] block mb-1">New Code</span>
+                <span className="text-3xl font-black text-white tracking-widest uppercase">{stage2NewCode || "---"}</span>
+              </div>
+              <div className="text-center bg-black/40 border border-white/5 rounded-2xl p-4">
+                <span className="text-[10px] font-black text-[#D4AF37]/60 uppercase tracking-[0.2em] block mb-1">Episode</span>
+                <span className="text-3xl font-black text-white tracking-widest uppercase">{stage2Episode || "---"}</span>
+              </div>
+            </div>
+
+            {/* Riddle Content */}
+            <div className="py-4 max-h-[45vh] overflow-y-auto">
+              {stage2Riddle ? (
+                stage2Riddle.startsWith("Riddle ") && stage2Riddle.length < 11 ? (
+                  <div className="text-4xl font-black text-white tracking-widest uppercase text-center py-6">
+                    {stage2Riddle}
+                  </div>
+                ) : (
+                  <div className="text-xl md:text-2xl text-gray-100 font-semibold leading-relaxed text-center whitespace-pre-wrap max-w-xl mx-auto px-2 font-sans select-text">
+                    {stage2Riddle}
+                  </div>
+                )
+              ) : (
+                <div className="text-4xl font-black text-white tracking-widest uppercase text-center py-6">
+                  ---
+                </div>
+              )}
+            </div>
+
+            {/* Bottom action button */}
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setIsRiddleModalOpen(false)}
+                className="px-8 py-3.5 rounded-xl bg-[#D4AF37] text-black font-extrabold uppercase text-[12px] tracking-widest hover:bg-[#D4AF37]/95 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+              >
+                Close Riddle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
