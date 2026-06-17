@@ -96,8 +96,8 @@ const getMostVisibleFace = (rx: number, ry: number) => {
   const zBack = -Math.cos(ay) * Math.cos(ax);
   const zLeft = Math.sin(ay) * Math.cos(ax);
   const zRight = -Math.sin(ay) * Math.cos(ax);
-  const zTop = Math.sin(ax);
-  const zBottom = -Math.sin(ax);
+  const zTop = -Math.sin(ax);
+  const zBottom = Math.sin(ax);
 
   const scores = [
     { index: 0, name: 'Front', z: zFront, roman: 'I' },
@@ -1010,6 +1010,11 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                 <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-normal block mt-1.5 opacity-85">
                   {isViewerMode ? 'Primary Focused Core' : 'Live Projection'}
                 </span>
+                {isViewerMode && (
+                  <span className="text-[10px] font-mono text-[#D4AF37] mt-1.5 block">
+                    Active Target Face: <span className="font-bold underline">{getMostVisibleFace(rotationX, rotationY).name} ({getMostVisibleFace(rotationX, rotationY).roman})</span>
+                  </span>
+                )}
               </div>
 
               {/* Notes Button in the UPPER RIGHT corner & Instruction Text */}
@@ -1221,14 +1226,43 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
 
               {/* Place Cube CTA in the Lower Right Corner */}
               {isViewerMode && (
-                <button
-                  onClick={handlePlaceCube}
-                  className="absolute bottom-6 right-6 text-xs font-black uppercase tracking-[0.15em] flex items-center gap-2 bg-[#D4AF37] hover:bg-[#ffe281] text-black px-6 py-3.5 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 z-20 border border-[#D4AF37]/35 shadow-[#D4AF37]/20"
-                  id="place-cube-action-btn"
-                >
-                  <CheckCircle className="w-4 h-4 text-black" />
-                  Place Cube
-                </button>
+                <div className="absolute bottom-6 right-6 flex flex-col sm:flex-row items-end sm:items-center gap-3 z-30 animate-in fade-in slide-in-from-bottom-3 duration-300">
+                  {(() => {
+                    const visibleFace = getMostVisibleFace(rotationX, rotationY);
+                    const faceData = faces[visibleFace.index];
+                    if (!faceData?.image) return null;
+                    return (
+                      <div className="flex items-center gap-1.5 bg-black/85 backdrop-blur-md border border-[#D4AF37]/30 p-1 rounded-xl shadow-xl">
+                        <button
+                          onClick={() => handleRotation(visibleFace.index, 'ccw')}
+                          className="px-2.5 py-1.5 text-zinc-400 hover:text-[#D4AF37] hover:bg-white/5 rounded-lg transition-all active:scale-90 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider font-extrabold"
+                          title={`Rotate ${visibleFace.name} Face 90° CCW`}
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <span>Spin ↺</span>
+                        </button>
+                        <div className="h-4 w-[1px] bg-white/10" />
+                        <button
+                          onClick={() => handleRotation(visibleFace.index, 'cw')}
+                          className="px-2.5 py-1.5 text-zinc-400 hover:text-[#D4AF37] hover:bg-white/5 rounded-lg transition-all active:scale-90 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider font-extrabold"
+                          title={`Rotate ${visibleFace.name} Face 90° CW`}
+                        >
+                          <span>Spin ↻</span>
+                          <RotateCw className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  <button
+                    onClick={handlePlaceCube}
+                    className="text-xs font-black uppercase tracking-[0.15em] flex items-center gap-2 bg-[#D4AF37] hover:bg-[#ffe281] text-black px-6 py-3.5 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 border border-[#D4AF37]/35 shadow-[#D4AF37]/20"
+                    id="place-cube-action-btn"
+                  >
+                    <CheckCircle className="w-4 h-4 text-black" />
+                    Place Cube
+                  </button>
+                </div>
               )}
 
               {/* Sub-toggle link to modify textures, absolutely positioned at lower left */}
