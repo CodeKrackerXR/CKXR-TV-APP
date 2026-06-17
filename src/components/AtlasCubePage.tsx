@@ -158,6 +158,7 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
 
   // Zoom control states & touch refs
   const [zoom, setZoom] = useState(1.0);
+  const [deckZoom, setDeckZoom] = useState(1.0);
   const startTouchDistance = useRef<number | null>(null);
   const startZoom = useRef<number>(1.0);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
@@ -535,9 +536,9 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-1 w-full max-w-7xl mx-auto flex flex-col justify-center gap-6 z-10 py-6"
+          className="flex-1 w-full max-w-none mx-auto flex flex-col justify-center gap-6 z-10 py-6 px-4 md:px-8"
         >
-          <div className="bg-zinc-900/60 border border-white/10 rounded-3xl p-3 sm:p-5 shadow-2xl backdrop-blur-md flex flex-col gap-6 relative">
+          <div className="bg-zinc-900/60 border border-white/10 rounded-3xl p-3 sm:p-5 shadow-2xl backdrop-blur-md flex flex-col gap-6 relative w-full">
             <div className="absolute top-3 left-3 w-4 h-4 border-t border-l border-[#D4AF37]/40 pointer-events-none" />
             <div className="absolute top-3 right-3 w-4 h-4 border-t border-r border-[#D4AF37]/40 pointer-events-none" />
             <div className="absolute bottom-3 left-3 w-4 h-4 border-b border-l border-[#D4AF37]/40 pointer-events-none" />
@@ -567,121 +568,96 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Flat Cube Assembly Grid - 5 wide, 2 high. Cubes completely flat and touching */}
-            <div className="w-full border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">
-              <div 
-                className="grid grid-cols-5 gap-0 bg-white/5"
-                onMouseLeave={() => {
-                  setActiveHoverCellIndex(null);
-                  setActiveHoverPosition(null);
-                }}
-              >
-                {cubes.map((c, idx) => {
-                  let placedFaceImage: string | null = null;
-                  if (c.placedFaceId !== null) {
-                    const matchedFace = c.faces.find(f => f.id === c.placedFaceId);
-                    if (matchedFace && matchedFace.image) {
-                      placedFaceImage = matchedFace.image;
-                    }
-                  }
+            {/* Flat Cube Assembly Grid and Zoom Slider side-by-side */}
+            <div className="flex flex-col xl:flex-row items-stretch gap-4 md:gap-6 w-full">
+              {/* Left Side: Assembly region with overflow-auto scrollable field */}
+              <div className="flex-1 min-w-0 border border-white/10 rounded-2xl overflow-auto shadow-2xl relative bg-zinc-950/60 min-h-[350px] flex items-center justify-center p-6">
+                <div 
+                  className="w-full transition-transform duration-150 origin-center flex items-center justify-center"
+                  style={{ 
+                    transform: `scale(${deckZoom})`,
+                    width: deckZoom > 1 ? `${100 * deckZoom}%` : '100%',
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <div 
+                    className="grid grid-cols-5 gap-0 bg-white/5 w-full aspect-[5/2]"
+                    onMouseLeave={() => {
+                      setActiveHoverCellIndex(null);
+                      setActiveHoverPosition(null);
+                    }}
+                  >
+                    {cubes.map((c, idx) => {
+                      let placedFaceImage: string | null = null;
+                      if (c.placedFaceId !== null) {
+                        const matchedFace = c.faces.find(f => f.id === c.placedFaceId);
+                        if (matchedFace && matchedFace.image) {
+                          placedFaceImage = matchedFace.image;
+                        }
+                      }
 
-                  const isSelected = selectedCubeNum === c.cubeNumber;
+                      const isSelected = selectedCubeNum === c.cubeNumber;
 
-                  return (
-                    <motion.div
-                      key={c.cubeNumber}
-                      layout
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', String(c.cubeNumber));
-                        setDraggingCubeNumber(c.cubeNumber);
-                        setSelectedCubeNum(c.cubeNumber);
-                      }}
-                      onDragEnd={() => {
-                        setDraggingCubeNumber(null);
-                        setActiveHoverCellIndex(null);
-                        setActiveHoverPosition(null);
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const relX = e.clientX - rect.left;
-                        const isLeft = relX < rect.width / 2;
-                        setActiveHoverCellIndex(idx);
-                        setActiveHoverPosition(isLeft ? 'before' : 'after');
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        if (draggingCubeNumber !== null) {
-                          const fromIndex = cubes.findIndex(item => item.cubeNumber === draggingCubeNumber);
-                          const toInsertIdx = activeHoverPosition === 'before' ? idx : idx + 1;
-                          moveCubeToInsertIndex(fromIndex, toInsertIdx);
-                        }
-                        setDraggingCubeNumber(null);
-                        setActiveHoverCellIndex(null);
-                        setActiveHoverPosition(null);
-                        setSelectedCubeNum(null);
-                      }}
-                      onMouseMove={(e) => {
-                        if (selectedCubeNum !== null && selectedCubeNum !== c.cubeNumber) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const relX = e.clientX - rect.left;
-                          const isLeft = relX < rect.width / 2;
-                          setActiveHoverCellIndex(idx);
-                          setActiveHoverPosition(isLeft ? 'before' : 'after');
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        if (selectedCubeNum !== null) {
-                          setActiveHoverCellIndex(null);
-                          setActiveHoverPosition(null);
-                        }
-                      }}
-                      onClick={(e) => {
-                        // Click logic: select first, or insert if someone else is selected
-                        if (selectedCubeNum === null) {
-                          setSelectedCubeNum(c.cubeNumber);
-                        } else {
-                          if (selectedCubeNum === c.cubeNumber) {
-                            setSelectedCubeNum(null);
-                          } else {
+                      return (
+                        <motion.div
+                          key={c.cubeNumber}
+                          layout
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', String(c.cubeNumber));
+                            setDraggingCubeNumber(c.cubeNumber);
+                            setSelectedCubeNum(c.cubeNumber);
+                          }}
+                          onDragEnd={() => {
+                            setDraggingCubeNumber(null);
+                            setActiveHoverCellIndex(null);
+                            setActiveHoverPosition(null);
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
                             const rect = e.currentTarget.getBoundingClientRect();
                             const relX = e.clientX - rect.left;
                             const isLeft = relX < rect.width / 2;
-                            const targetInsertIdx = isLeft ? idx : idx + 1;
-                            
-                            const fromIndex = cubes.findIndex(item => item.cubeNumber === selectedCubeNum);
-                            moveCubeToInsertIndex(fromIndex, targetInsertIdx);
-                            setSelectedCubeNum(null);
+                            setActiveHoverCellIndex(idx);
+                            setActiveHoverPosition(isLeft ? 'before' : 'after');
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (draggingCubeNumber !== null) {
+                              const fromIndex = cubes.findIndex(item => item.cubeNumber === draggingCubeNumber);
+                              const toInsertIdx = activeHoverPosition === 'before' ? idx : idx + 1;
+                              moveCubeToInsertIndex(fromIndex, toInsertIdx);
+                            }
+                            setDraggingCubeNumber(null);
                             setActiveHoverCellIndex(null);
                             setActiveHoverPosition(null);
-                          }
-                        }
-                      }}
-                      onDoubleClick={() => {
-                        selectCubeForViewer(c.cubeNumber);
-                      }}
-                      onTouchStart={() => {
-                        touchStartRef.current = Date.now();
-                        longPressTimer.current = setTimeout(() => {
-                          setSelectedCubeNum(c.cubeNumber);
-                        }, 500);
-                      }}
-                      onTouchEnd={(e) => {
-                        if (longPressTimer.current) {
-                          clearTimeout(longPressTimer.current);
-                        }
-                        if (touchStartRef.current !== null) {
-                          const duration = Date.now() - touchStartRef.current;
-                          touchStartRef.current = null;
-                          if (duration < 350) {
+                            setSelectedCubeNum(null);
+                          }}
+                          onMouseMove={(e) => {
+                            if (selectedCubeNum !== null && selectedCubeNum !== c.cubeNumber) {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const relX = e.clientX - rect.left;
+                              const isLeft = relX < rect.width / 2;
+                              setActiveHoverCellIndex(idx);
+                              setActiveHoverPosition(isLeft ? 'before' : 'after');
+                            }
+                          }}
+                          onMouseLeave={() => {
                             if (selectedCubeNum !== null) {
+                              setActiveHoverCellIndex(null);
+                              setActiveHoverPosition(null);
+                            }
+                          }}
+                          onClick={(e) => {
+                            // Click logic: select first, or insert if someone else is selected
+                            if (selectedCubeNum === null) {
+                              setSelectedCubeNum(c.cubeNumber);
+                            } else {
                               if (selectedCubeNum === c.cubeNumber) {
                                 setSelectedCubeNum(null);
                               } else {
-                                const touch = e.changedTouches[0];
                                 const rect = e.currentTarget.getBoundingClientRect();
-                                const relX = touch.clientX - rect.left;
+                                const relX = e.clientX - rect.left;
                                 const isLeft = relX < rect.width / 2;
                                 const targetInsertIdx = isLeft ? idx : idx + 1;
                                 
@@ -691,85 +667,166 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                                 setActiveHoverCellIndex(null);
                                 setActiveHoverPosition(null);
                               }
-                            } else {
-                              setSelectedCubeNum(c.cubeNumber);
                             }
-                          }
-                        }
-                      }}
-                      onTouchCancel={() => {
-                        if (longPressTimer.current) {
-                          clearTimeout(longPressTimer.current);
-                        }
-                      }}
-                      whileHover={{ scale: 0.985 }}
-                      className={`aspect-square bg-zinc-950 border flex items-center justify-center relative cursor-grab active:cursor-grabbing group overflow-hidden transition-all duration-300 ${
-                        isSelected
-                          ? 'border-emerald-500 ring-2 ring-emerald-500/50 scale-95 z-20 shadow-[0_0_20px_rgba(16,185,129,0.5)]'
-                          : 'border-white/10 hover:border-[#D4AF37]/30'
-                      }`}
-                      title={`Double-click to open 3D view. Drag or click to reorder Cube ${c.cubeNumber}`}
-                    >
-                      {placedFaceImage ? (
-                        <div className="w-full h-full p-0 relative flex items-center justify-center">
-                          <img
-                            src={placedFaceImage}
-                            alt={`Cube ${c.cubeNumber}`}
-                            className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-300"
-                            style={{ transform: `rotate(${c.placedRotation}deg)` }}
-                            referrerPolicy="no-referrer"
-                          />
-                          {/* Roman designation of active face */}
-                          <div className="absolute top-2 right-2 px-1 py-[1px] bg-black/85 border border-[#D4AF37]/30 text-white font-serif text-[8px] font-bold rounded">
-                            {c.faces.find(f => f.id === c.placedFaceId)?.roman}
-                          </div>
-                          {/* Inner glowing edge frame highlight */}
-                          <div className="absolute inset-0 border border-white/10 pointer-events-none group-hover:border-[#D4AF37]/50 transition-colors" />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-2 relative bg-zinc-950/90 group-hover:bg-[#D4AF37]/[0.02] transition-colors">
-                          <div className="absolute inset-2 border border-dashed border-white/5 group-hover:border-[#D4AF37]/25 rounded-xl transition-colors flex flex-col items-center justify-center">
-                            <Box className="w-4 h-4 text-zinc-700 group-hover:text-[#D4AF37]/45 mb-1 transition-colors" />
-                            <span className="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-300 font-bold transition-colors">Cube {c.cubeNumber}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Golden numbering badge block */}
-                      <div className="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/85 border border-white/10 text-white group-hover:text-black group-hover:bg-[#D4AF37] group-hover:border-[#D4AF37] font-mono text-[8px] font-black rounded uppercase transition-all select-none">
-                        C{c.cubeNumber}
-                      </div>
-
-                      {/* Moving ready / Selection Badge indicator */}
-                      {isSelected && (
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-emerald-950 border border-emerald-500 text-emerald-300 font-semibold text-[8px] font-mono tracking-wider rounded uppercase animate-bounce select-none">
-                          Ready to Move
-                        </div>
-                      )}
-
-                      {/* Interactive overlay instructions on hover */}
-                      <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 select-none text-center pointer-events-none">
-                        <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider">
-                          {selectedCubeNum === null ? "Move or Open" : "Insert Here"}
-                        </span>
-                        <span className="text-[8px] font-mono text-zinc-400 mt-1 uppercase">
-                          {selectedCubeNum === null 
-                            ? "Drag or click to move • Double-click to open" 
-                            : "Click/drop to place here"}
-                        </span>
-                      </div>
-
-                      {/* Highlight boundary line (glow indicator showing insertion point) */}
-                      {activeHoverCellIndex === idx && (activeHoverPosition !== null) && (selectedCubeNum !== null || draggingCubeNumber !== null) && selectedCubeNum !== c.cubeNumber && (
-                        <div 
-                          className={`absolute top-0 bottom-0 w-1 bg-emerald-400 shadow-[0_0_12px_#10B981] z-30 pointer-events-none animate-pulse ${
-                            activeHoverPosition === 'before' ? 'left-0' : 'right-0'
+                          }}
+                          onDoubleClick={() => {
+                            selectCubeForViewer(c.cubeNumber);
+                          }}
+                          onTouchStart={() => {
+                            touchStartRef.current = Date.now();
+                            longPressTimer.current = setTimeout(() => {
+                              setSelectedCubeNum(c.cubeNumber);
+                            }, 500);
+                          }}
+                          onTouchEnd={(e) => {
+                            if (longPressTimer.current) {
+                              clearTimeout(longPressTimer.current);
+                            }
+                            if (touchStartRef.current !== null) {
+                              const duration = Date.now() - touchStartRef.current;
+                              touchStartRef.current = null;
+                              if (duration < 350) {
+                                if (selectedCubeNum !== null) {
+                                  if (selectedCubeNum === c.cubeNumber) {
+                                    setSelectedCubeNum(null);
+                                  } else {
+                                    const touch = e.changedTouches[0];
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const relX = touch.clientX - rect.left;
+                                    const isLeft = relX < rect.width / 2;
+                                    const targetInsertIdx = isLeft ? idx : idx + 1;
+                                    
+                                    const fromIndex = cubes.findIndex(item => item.cubeNumber === selectedCubeNum);
+                                    moveCubeToInsertIndex(fromIndex, targetInsertIdx);
+                                    setSelectedCubeNum(null);
+                                    setActiveHoverCellIndex(null);
+                                    setActiveHoverPosition(null);
+                                  }
+                                } else {
+                                  setSelectedCubeNum(c.cubeNumber);
+                                }
+                              }
+                            }
+                          }}
+                          onTouchCancel={() => {
+                            if (longPressTimer.current) {
+                              clearTimeout(longPressTimer.current);
+                            }
+                          }}
+                          whileHover={{ scale: 0.985 }}
+                          className={`aspect-square bg-zinc-950 border flex items-center justify-center relative cursor-grab active:cursor-grabbing group overflow-hidden transition-all duration-300 ${
+                            isSelected
+                              ? 'border-emerald-500 ring-2 ring-emerald-500/50 scale-95 z-20 shadow-[0_0_20px_rgba(16,185,129,0.5)]'
+                              : 'border-white/10 hover:border-[#D4AF37]/30'
                           }`}
-                        />
-                      )}
-                    </motion.div>
-                  );
-                })}
+                          title={`Double-click to open 3D view. Drag or click to reorder Cube ${c.cubeNumber}`}
+                        >
+                          {placedFaceImage ? (
+                            <div className="w-full h-full p-0 relative flex items-center justify-center">
+                              <img
+                                src={placedFaceImage}
+                                alt={`Cube ${c.cubeNumber}`}
+                                className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-300"
+                                style={{ transform: `rotate(${c.placedRotation}deg)` }}
+                                referrerPolicy="no-referrer"
+                              />
+                              {/* Roman designation of active face */}
+                              <div className="absolute top-2 right-2 px-1 py-[1px] bg-black/85 border border-[#D4AF37]/30 text-white font-serif text-[8px] font-bold rounded">
+                                {c.faces.find(f => f.id === c.placedFaceId)?.roman}
+                              </div>
+                              {/* Inner glowing edge frame highlight */}
+                              <div className="absolute inset-0 border border-white/10 pointer-events-none group-hover:border-[#D4AF37]/50 transition-colors" />
+                            </div>
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center p-2 relative bg-zinc-950/90 group-hover:bg-[#D4AF37]/[0.02] transition-colors">
+                              <div className="absolute inset-2 border border-dashed border-white/5 group-hover:border-[#D4AF37]/25 rounded-xl transition-colors flex flex-col items-center justify-center">
+                                <Box className="w-4 h-4 text-zinc-700 group-hover:text-[#D4AF37]/45 mb-1 transition-colors" />
+                                <span className="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-300 font-bold transition-colors">Cube {c.cubeNumber}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Golden numbering badge block */}
+                          <div className="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/85 border border-white/10 text-white group-hover:text-black group-hover:bg-[#D4AF37] group-hover:border-[#D4AF37] font-mono text-[8px] font-black rounded uppercase transition-all select-none">
+                            C{c.cubeNumber}
+                          </div>
+
+                          {/* Moving ready / Selection Badge indicator */}
+                          {isSelected && (
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-emerald-950 border border-emerald-500 text-emerald-300 font-semibold text-[8px] font-mono tracking-wider rounded uppercase animate-bounce select-none">
+                              Ready to Move
+                            </div>
+                          )}
+
+                          {/* Interactive overlay instructions on hover */}
+                          <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 select-none text-center pointer-events-none">
+                            <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider">
+                              {selectedCubeNum === null ? "Move or Open" : "Insert Here"}
+                            </span>
+                            <span className="text-[8px] font-mono text-zinc-400 mt-1 uppercase">
+                              {selectedCubeNum === null 
+                                ? "Drag or click to move • Double-click to open" 
+                                : "Click/drop to place here"}
+                            </span>
+                          </div>
+
+                          {/* Highlight boundary line (glow indicator showing insertion point) */}
+                          {activeHoverCellIndex === idx && (activeHoverPosition !== null) && (selectedCubeNum !== null || draggingCubeNumber !== null) && selectedCubeNum !== c.cubeNumber && (
+                            <div 
+                              className={`absolute top-0 bottom-0 w-1 bg-emerald-400 shadow-[0_0_12px_#10B981] z-30 pointer-events-none animate-pulse ${
+                                activeHoverPosition === 'before' ? 'left-0' : 'right-0'
+                              }`}
+                            />
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Zoom Slider (matches 3D viewer vertical slider) */}
+              <div className="flex-none select-none flex flex-col items-center justify-center gap-3 bg-zinc-950/90 border border-white/15 rounded-2xl py-5 px-3 shadow-xl backdrop-blur-md">
+                <span className="text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-widest [writing-mode:vertical-lr] rotate-180 select-none mb-1">ZOOM</span>
+                
+                <button 
+                  onClick={() => setDeckZoom(prev => Math.min(prev + 0.1, 3.0))}
+                  className="p-1 hover:text-[#D4AF37] text-white/45 hover:bg-white/5 rounded-lg transition-all active:scale-95"
+                  title="Zoom In (+)"
+                  id="deck-zoom-in"
+                >
+                  <ZoomIn className="w-4 h-4 text-[#D4AF37]" />
+                </button>
+
+                <div className="h-32 flex items-center justify-center py-1">
+                  <input 
+                    type="range"
+                    min="0.4"
+                    max="3.0"
+                    step="0.05"
+                    value={deckZoom}
+                    onChange={(e) => setDeckZoom(parseFloat(e.target.value))}
+                    className="accent-[#D4AF37] cursor-ns-resize h-full w-2 appearance-none rounded-lg bg-zinc-800"
+                    style={{
+                      WebkitAppearance: 'slider-vertical',
+                      writingMode: 'vertical-lr',
+                    }}
+                    id="deck-zoom-slider"
+                  />
+                </div>
+
+                <button 
+                  onClick={() => setDeckZoom(prev => Math.max(prev - 0.1, 0.4))}
+                  className="p-1 hover:text-[#D4AF37] text-white/45 hover:bg-white/5 rounded-lg transition-all active:scale-95"
+                  title="Zoom Out (-)"
+                  id="deck-zoom-out"
+                >
+                  <ZoomOut className="w-4 h-4 text-zinc-400" />
+                </button>
+
+                <span className="text-[9px] font-mono text-zinc-400 font-bold select-none min-w-[28px] text-center mt-1">
+                  {Math.round(deckZoom * 100)}%
+                </span>
               </div>
             </div>
 
