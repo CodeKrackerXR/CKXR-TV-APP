@@ -123,14 +123,43 @@ const getRowPosLabel = (idx: number) => {
     const row = idx < 35 ? 'T' : 'B';
     return `D3${row}${idx + 1}`;
   }
+  if (idx >= 40 && idx < 50) { // Decoy 4 (Cubes 41-50, indices 40-49)
+    const row = idx < 45 ? 'T' : 'B';
+    return `D4${row}${idx + 1}`;
+  }
+  if (idx >= 50 && idx < 60) { // Decoy 5 (Cubes 51-60, indices 50-59)
+    const row = idx < 55 ? 'T' : 'B';
+    return `D5${row}${idx + 1}`;
+  }
   return null;
 };
 
 
 export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtuber, onPlay, onGoToCube }) => {
-  const [inputText, setInputText] = useState('CODEKRACKER');
+  const [inputText, setInputText] = useState('CODE');
   const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
   
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const alphabetScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    const el = alphabetScrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    const progress = (el.scrollLeft / maxScroll) * 100;
+    setScrollProgress(progress);
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const progress = parseFloat(e.target.value);
+    setScrollProgress(progress);
+    const el = alphabetScrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    el.scrollLeft = (progress / 100) * maxScroll;
+  };
+
   const [isSaving, setIsSaving] = useState(false);
 
   // Lazy initialize 60 cubes
@@ -176,6 +205,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
   });
 
   const [selectedLetter, setSelectedLetter] = useState<string>('C');
+  const [viewMode, setViewMode] = useState<'live-decoy' | 'cube-faces'>(() => {
+    return (localStorage.getItem('atlas_cipher_view_mode') as 'live-decoy' | 'cube-faces') || 'live-decoy';
+  });
   const [activeRiddleEditIndex, setActiveRiddleEditIndex] = useState<number | null>(null);
   const [tempRiddleText, setTempRiddleText] = useState<string>('');
 
@@ -239,6 +271,53 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     setLastSavedSectionCubes(prev => {
       const updated = [...prev];
       for (let i = startIndex; i < startIndex + 10; i++) {
+        const curr = cubes[i];
+        updated[i] = {
+          letter: curr.letter || '',
+          number: curr.number || '',
+          episode: curr.episode || '',
+          sponsorAd: curr.sponsorAd || '',
+          rotation: curr.rotation || '',
+          finalLetter: curr.finalLetter || '',
+          finalNumber: curr.finalNumber || '',
+          riddle: curr.riddle || ''
+        };
+      }
+      return updated;
+    });
+    saveToLocalStorage();
+  };
+
+  // Helper to determine if any of the 6 faces of Cube c is changed/dirty
+  const isCubeDirty = (cubeNum: number) => {
+    const cIdx = cubeNum - 1; // 0 to 9 index
+    const facesIndices = [cIdx, 10 + cIdx, 20 + cIdx, 30 + cIdx, 40 + cIdx, 50 + cIdx];
+    for (const i of facesIndices) {
+      const curr = cubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '', riddle: '' };
+      const saved = lastSavedSectionCubes[i] || { letter: '', number: '', episode: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '', riddle: '' };
+      if (
+        (curr.letter || '') !== (saved.letter || '') ||
+        (curr.number || '') !== (saved.number || '') ||
+        (curr.episode || '') !== (saved.episode || '') ||
+        (curr.sponsorAd || '') !== (saved.sponsorAd || '') ||
+        (curr.rotation || '') !== (saved.rotation || '') ||
+        (curr.finalLetter || '') !== (saved.finalLetter || '') ||
+        (curr.finalNumber || '') !== (saved.finalNumber || '') ||
+        (curr.riddle || '') !== (saved.riddle || '')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Handler to save all 6 faces of Cube c
+  const handleSaveCube = (cubeNum: number) => {
+    const cIdx = cubeNum - 1;
+    const facesIndices = [cIdx, 10 + cIdx, 20 + cIdx, 30 + cIdx, 40 + cIdx, 50 + cIdx];
+    setLastSavedSectionCubes(prev => {
+      const updated = [...prev];
+      for (const i of facesIndices) {
         const curr = cubes[i];
         updated[i] = {
           letter: curr.letter || '',
@@ -591,6 +670,193 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     }
   };
 
+  const renderCubeCard = (idx: number, faceNumber?: number) => {
+    const cube = cubes[idx];
+    if (!cube) return null;
+    const shiftedL = getShiftedLetter(cube.letter, shift);
+    const shiftedN = getShiftedNumber(cube.number, shift);
+    const code = `${shiftedL}${shiftedN}`;
+    
+    const isLiveMap = idx < 10;
+    const isDuplicate = isLiveMap ? false : !!(cube.letter && cube.number && duplicateOutputs.has(code));
+    const rowPosLabel = getRowPosLabel(idx);
+    
+    const isDecoy5 = idx >= 50 && idx < 60;
+    const isGoldHighlight = isLiveMap || isDecoy5;
+
+    return (
+      <div key={idx} className={`bg-black/40 border-2 rounded-3xl p-8 flex flex-col gap-6 group transition-all hover:bg-black/60 shadow-xl ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-red-500 bg-red-500/5') : 'border-white/5 hover:border-[#D4AF37]/30'}`}>
+        <div className="flex flex-col items-center justify-center pb-4 border-b border-white/5 mb-2">
+          {faceNumber ? (
+            <div className="flex flex-col items-center justify-center text-center">
+              <span className="text-2xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                Cube {idx + 1}
+              </span>
+              <span className="text-white text-base font-black uppercase tracking-[0.1em] mt-1">
+                Face {faceNumber}
+              </span>
+            </div>
+          ) : (
+            <span className="text-2xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)] text-center w-full min-h-[40px] flex items-center justify-center">
+              Cube {idx + 1}
+            </span>
+          )}
+          {isDuplicate && (
+            <div className={`flex items-center gap-1 animate-pulse mt-2 px-3 py-1 rounded-full border ${isGoldHighlight ? 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
+              <Info className="w-3 h-3" />
+              <span className="text-[11px] font-black uppercase tracking-wider">Collision</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+           <div className="flex flex-col gap-2">
+             <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1">Letter</span>
+             <input
+               type="text"
+               ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].letter = el; }}
+               value={cube.letter || ''}
+               onChange={(e) => handleCubeChange(idx, 'letter', e.target.value)}
+               maxLength={1}
+               placeholder="A"
+               className={`w-full bg-black/60 border-2 rounded-2xl p-4 text-center font-black text-3xl text-white focus:outline-none transition-all placeholder:opacity-20 ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37]/50 focus:border-[#D4AF37] text-white' : 'border-red-500/50 focus:border-red-500 text-red-100') : 'border-white/10 focus:border-[#D4AF37]'}`}
+             />
+           </div>
+           <div className="flex flex-col gap-2">
+             <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1">Number</span>
+             <input
+               type="text"
+               ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].number = el; }}
+               value={cube.number || ''}
+               onChange={(e) => handleCubeChange(idx, 'number', e.target.value)}
+               placeholder="1-10"
+               className={`w-full bg-black/60 border-2 rounded-2xl p-4 text-center font-black text-3xl text-white focus:outline-none transition-all placeholder:opacity-20 ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37]/50 focus:border-[#D4AF37] text-white' : 'border-red-500/50 focus:border-red-500 text-red-100') : 'border-white/10 focus:border-[#D4AF37]'}`}
+             />
+           </div>
+        </div>
+
+        {isLiveMap && (
+          <div className="grid grid-cols-1 gap-4 mt-2">
+             <div className="flex flex-col gap-2">
+               <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Episode</span>
+               <input
+                 type="text"
+                 ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].episode = el; }}
+                 value={cube.episode || ''}
+                 onChange={(e) => handleCubeChange(idx, 'episode', e.target.value)}
+                 placeholder="1-10"
+                 className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white focus:outline-none focus:border-[#D4AF37]/50 transition-all font-mono"
+               />
+             </div>
+             <div className="flex flex-col gap-2">
+               <div className="flex items-center gap-2 ml-1">
+                 <span className={`w-2.5 h-2.5 rounded-full ${
+                   !cube.riddle || cube.riddle.trim() === ''
+                     ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse'
+                     : cube.riddle === (lastSavedSectionCubes[idx]?.riddle || '')
+                       ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,148,0.6)]'
+                       : 'bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                 }`} />
+                 <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em]">Riddle</span>
+               </div>
+               <button
+                 type="button"
+                 onClick={() => {
+                   setActiveRiddleEditIndex(idx);
+                   setTempRiddleText(cube.riddle || '');
+                 }}
+                 className="w-full bg-[#f1c40f]/10 border border-[#f1c40f]/40 hover:bg-[#f1c40f]/20 hover:border-[#f1c40f] rounded-xl p-3 text-center font-black text-xl text-[#f1c40f] font-mono transition-all duration-200 cursor-pointer active:scale-[0.98]"
+               >
+                 Riddle {idx + 1}
+               </button>
+             </div>
+             <div className="flex flex-col gap-2">
+               <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Sponsor Ad</span>
+               <input
+                 type="text"
+                 ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].sponsorAd = el; }}
+                 value={cube.sponsorAd || ''}
+                 onChange={(e) => handleCubeChange(idx, 'sponsorAd', e.target.value)}
+                 placeholder="1-10"
+                 className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white focus:outline-none focus:border-[#D4AF37]/50 transition-all font-mono"
+               />
+             </div>
+             <div className="flex flex-col gap-2 relative">
+               <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Rotation</span>
+               <div className="relative">
+                 <input
+                   type="text"
+                   ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].rotation = el; }}
+                   value={cube.rotation || ''}
+                   onChange={(e) => handleCubeChange(idx, 'rotation', e.target.value)}
+                   placeholder="Degree"
+                   className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white focus:outline-none focus:border-[#D4AF37]/50 transition-all font-mono"
+                 />
+                 {cube.rotation && (['0', '90', '180', '270'].includes(cube.rotation)) && (
+                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-2xl font-black text-[#D4AF37]">°</span>
+                 )}
+               </div>
+             </div>
+          </div>
+        )}
+
+        {(isLiveMap || rowPosLabel) && (
+          <div className="mt-2 flex flex-col gap-5 p-6 bg-black/60 rounded-3xl border border-white/5 shadow-inner group-hover:bg-black/80 transition-all">
+            {isLiveMap && (
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                 <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 leading-tight">Cipher<br/>Output:</span>
+                 <span className={`text-4xl font-black font-mono tracking-widest italic ${isDuplicate ? (isGoldHighlight ? 'text-[#D4AF37]' : 'text-red-500') : 'text-[#D4AF37]'}`}>
+                  {shiftedL || '-'}{shiftedN || '-'}
+                </span>
+              </div>
+            )}
+
+            {isLiveMap && (
+              <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
+                 <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#D4AF37]/60 text-center">
+                  Final Cube Face
+                </span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                     <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Letter</span>
+                    <input
+                      type="text"
+                      value={cube.finalLetter || ''}
+                      onChange={(e) => handleCubeChange(idx, 'finalLetter', e.target.value)}
+                      placeholder="A"
+                      maxLength={1}
+                      className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                     <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Number</span>
+                    <input
+                      type="text"
+                      value={cube.finalNumber || ''}
+                      onChange={(e) => handleCubeChange(idx, 'finalNumber', e.target.value)}
+                      placeholder="1-10"
+                      maxLength={2}
+                      className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {rowPosLabel && (
+               <div className="flex flex-col items-center justify-center pt-2">
+                  <span className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Cube Position</span>
+                  <div className="text-2xl font-black text-[#D4AF37] tracking-[0.2em] drop-shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                    {rowPosLabel}
+                  </div>
+               </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderCubeSection = (title: string, startIndex: number) => {
     return (
       <div className="max-w-[1600px] mx-auto w-full mb-12">
@@ -635,177 +901,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {cubes.slice(startIndex, startIndex + 10).map((cube, innerIdx) => {
+            {Array.from({ length: 10 }, (_, innerIdx) => {
               const idx = startIndex + innerIdx;
-              const shiftedL = getShiftedLetter(cube.letter, shift);
-              const shiftedN = getShiftedNumber(cube.number, shift);
-              const code = `${shiftedL}${shiftedN}`;
-              const isDuplicate = startIndex === 0 ? false : !!(cube.letter && cube.number && duplicateOutputs.has(code));
-              const rowPosLabel = getRowPosLabel(idx);
-              const isLiveMap = startIndex === 0;
-              const isDecoy5 = startIndex === 50;
-              const isGoldHighlight = isLiveMap || isDecoy5;
-
-              return (
-                <div key={idx} className={`bg-black/40 border-2 rounded-3xl p-8 flex flex-col gap-6 group transition-all hover:bg-black/60 shadow-xl ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-red-500 bg-red-500/5') : 'border-white/5 hover:border-[#D4AF37]/30'}`}>
-                  <div className="flex flex-col items-center justify-center pb-4 border-b border-white/5 mb-2">
-                    <span className="text-4xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)] text-center w-full">
-                      Cube {idx + 1}
-                    </span>
-                    {isDuplicate && (
-                      <div className={`flex items-center gap-1 animate-pulse mt-2 px-3 py-1 rounded-full border ${isGoldHighlight ? 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
-                        <Info className="w-3 h-3" />
-                        <span className="text-[11px] font-black uppercase tracking-wider">Collision</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="flex flex-col gap-2">
-                       <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1">Letter</span>
-                       <input
-                         type="text"
-                         ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].letter = el; }}
-                         value={cube.letter}
-                         onChange={(e) => handleCubeChange(idx, 'letter', e.target.value)}
-                         maxLength={1}
-                         placeholder="A"
-                         className={`w-full bg-black/60 border-2 rounded-2xl p-4 text-center font-black text-3xl text-white focus:outline-none transition-all placeholder:opacity-20 ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37]/50 focus:border-[#D4AF37] text-white' : 'border-red-500/50 focus:border-red-500 text-red-100') : 'border-white/10 focus:border-[#D4AF37]'}`}
-                       />
-                     </div>
-                     <div className="flex flex-col gap-2">
-                       <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1">Number</span>
-                       <input
-                         type="text"
-                         ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].number = el; }}
-                         value={cube.number}
-                         onChange={(e) => handleCubeChange(idx, 'number', e.target.value)}
-                         placeholder="1-10"
-                         className={`w-full bg-black/60 border-2 rounded-2xl p-4 text-center font-black text-3xl text-white focus:outline-none transition-all placeholder:opacity-20 ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37]/50 focus:border-[#D4AF37] text-white' : 'border-red-500/50 focus:border-red-500 text-red-100') : 'border-white/10 focus:border-[#D4AF37]'}`}
-                       />
-                     </div>
-                  </div>
-
-                  {isLiveMap && (
-                    <div className="grid grid-cols-1 gap-4 mt-2">
-                       <div className="flex flex-col gap-2">
-                         <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Episode</span>
-                         <input
-                           type="text"
-                           ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].episode = el; }}
-                           value={cube.episode}
-                           onChange={(e) => handleCubeChange(idx, 'episode', e.target.value)}
-                           placeholder="1-10"
-                           className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white focus:outline-none focus:border-[#D4AF37]/50 transition-all font-mono"
-                         />
-                       </div>
-                       <div className="flex flex-col gap-2">
-                         <div className="flex items-center gap-2 ml-1">
-                           <span className={`w-2.5 h-2.5 rounded-full ${
-                             !cube.riddle || cube.riddle.trim() === ''
-                               ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse'
-                               : cube.riddle === (lastSavedSectionCubes[idx]?.riddle || '')
-                                 ? 'bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,148,0.6)]'
-                                 : 'bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.6)]'
-                           }`} />
-                           <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em]">Riddle</span>
-                         </div>
-                         <button
-                           type="button"
-                           onClick={() => {
-                             setActiveRiddleEditIndex(idx);
-                             setTempRiddleText(cube.riddle || '');
-                           }}
-                           className="w-full bg-[#f1c40f]/10 border border-[#f1c40f]/40 hover:bg-[#f1c40f]/20 hover:border-[#f1c40f] rounded-xl p-3 text-center font-black text-xl text-[#f1c40f] font-mono transition-all duration-200 cursor-pointer active:scale-[0.98]"
-                         >
-                           Riddle {idx + 1}
-                         </button>
-                       </div>
-                       <div className="flex flex-col gap-2">
-                         <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Sponsor Ad</span>
-                         <input
-                           type="text"
-                           ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].sponsorAd = el; }}
-                           value={cube.sponsorAd}
-                           onChange={(e) => handleCubeChange(idx, 'sponsorAd', e.target.value)}
-                           placeholder="1-10"
-                           className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white focus:outline-none focus:border-[#D4AF37]/50 transition-all font-mono"
-                         />
-                       </div>
-                       <div className="flex flex-col gap-2 relative">
-                         <span className="text-[11px] font-black text-[#D4AF37]/40 uppercase tracking-[0.2em] ml-1">Rotation</span>
-                         <div className="relative">
-                           <input
-                             type="text"
-                             ref={el => { if (cubeRefs.current[idx]) cubeRefs.current[idx].rotation = el; }}
-                             value={cube.rotation}
-                             onChange={(e) => handleCubeChange(idx, 'rotation', e.target.value)}
-                             placeholder="Degree"
-                             className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-center font-black text-xl text-white focus:outline-none focus:border-[#D4AF37]/50 transition-all font-mono"
-                           />
-                           {cube.rotation && (['0', '90', '180', '270'].includes(cube.rotation)) && (
-                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-2xl font-black text-[#D4AF37]">°</span>
-                           )}
-                         </div>
-                       </div>
-                    </div>
-                  )}
-
-                  {(isLiveMap || rowPosLabel) && (
-                    <div className="mt-2 flex flex-col gap-5 p-6 bg-black/60 rounded-3xl border border-white/5 shadow-inner group-hover:bg-black/80 transition-all">
-                      {isLiveMap && (
-                        <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                           <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 leading-tight">Cipher<br/>Output:</span>
-                           <span className={`text-4xl font-black font-mono tracking-widest italic ${isDuplicate ? (isGoldHighlight ? 'text-[#D4AF37]' : 'text-red-500') : 'text-[#D4AF37]'}`}>
-                            {shiftedL || '-'}{shiftedN || '-'}
-                          </span>
-                        </div>
-                      )}
-
-                      {isLiveMap && (
-                        <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
-                           <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#D4AF37]/60 text-center">
-                            Final Cube Face
-                          </span>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-2">
-                               <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Letter</span>
-                              <input
-                                type="text"
-                                value={cube.finalLetter || ''}
-                                onChange={(e) => handleCubeChange(idx, 'finalLetter', e.target.value)}
-                                placeholder="A"
-                                maxLength={1}
-                                className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                               <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Number</span>
-                              <input
-                                type="text"
-                                value={cube.finalNumber || ''}
-                                onChange={(e) => handleCubeChange(idx, 'finalNumber', e.target.value)}
-                                placeholder="1-10"
-                                maxLength={2}
-                                className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {rowPosLabel && (
-                         <div className="flex flex-col items-center justify-center pt-2">
-                            <span className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Cube Position</span>
-                            <div className="text-2xl font-black text-[#D4AF37] tracking-[0.2em] drop-shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-                              {rowPosLabel}
-                            </div>
-                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
+              return renderCubeCard(idx);
             })}
           </div>
           
@@ -819,6 +917,72 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       </div>
     );
   };
+
+  const renderCubeFacesSection = (cubeNum: number) => {
+    const cIdx = cubeNum - 1;
+    const isDirty = isCubeDirty(cubeNum);
+
+    return (
+      <div key={cubeNum} className="max-w-[1600px] mx-auto w-full mb-12 animate-in fade-in duration-300">
+        <div className="bg-[#121212] border border-[#D4AF37]/20 rounded-3xl p-10 shadow-2xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-4">
+              <Activity className="w-8 h-8 text-[#D4AF37]" />
+              Cube {cubeNum} - All Faces
+            </h3>
+            
+            {/* Controls Row: Key Ref + Save Info Button */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-3 bg-[#22c55e]/10 border border-[#22c55e]/30 px-6 py-3 rounded-xl select-none">
+                 <span className="text-[10px] font-black text-[#22c55e]/60 uppercase tracking-widest">Key Ref</span>
+                 <span className="text-3xl font-black text-[#22c55e] italic leading-none">{selectedLetter}{shift}</span>
+              </div>
+
+              <button
+                onClick={() => handleSaveCube(cubeNum)}
+                className={`px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 flex items-center gap-2.5 shadow-lg select-none ${
+                  isDirty
+                    ? 'bg-red-500/15 border-2 border-red-500/50 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer'
+                    : 'bg-emerald-500/10 border-2 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.08)] cursor-default'
+                }`}
+                disabled={!isDirty}
+                id={`save-cube-btn-${cubeNum}`}
+                title={isDirty ? `Save Changes in Cube ${cubeNum}` : `All Changes Saved in Cube ${cubeNum}`}
+              >
+                {isDirty ? (
+                  <>
+                    <Save className="w-4 h-4 animate-pulse text-red-500 group-hover:text-white" />
+                    <span>Save Cube</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>Saved</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+            {renderCubeCard(cIdx, 1)}
+            {renderCubeCard(10 + cIdx, 2)}
+            {renderCubeCard(20 + cIdx, 3)}
+            {renderCubeCard(30 + cIdx, 4)}
+            {renderCubeCard(40 + cIdx, 5)}
+            {renderCubeCard(50 + cIdx, 6)}
+          </div>
+          
+          <div className="mt-12 p-8 bg-black/20 rounded-3xl border border-white/5 flex items-start gap-5">
+             <Info className="w-6 h-6 text-[#D4AF37] mt-1 shrink-0" />
+             <p className="text-sm text-white/40 font-bold uppercase leading-relaxed tracking-wider">
+               Cube Faces Configuration: Face 1 is the <span className="text-[#D4AF37] font-black">Active Live Map</span> block containing standard rotation keys and local riddle properties. Faces 2-6 serve as the Decoy layer.
+             </p>
+          </div>
+        </div>
+      </div>
+    );
+  };;
 
   return (
     <div className="min-h-screen w-full bg-[#0a0a0a] text-white font-sans overflow-x-hidden p-4 md:p-8">
@@ -936,7 +1100,11 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             </h3>
 
             <div className="bg-black/40 rounded-2xl p-6 border border-white/5 mb-8">
-              <div className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide font-mono">
+              <div 
+                ref={alphabetScrollRef}
+                onScroll={handleScroll}
+                className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide font-mono"
+              >
                 {ALPHABET.map((l, i) => {
                   const isSelected = l === selectedLetter;
                   return (
@@ -944,7 +1112,6 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                       <button
                         onClick={() => {
                           setSelectedLetter(l);
-                          setInputText(prev => prev ? prev + l : l);
                         }}
                         className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                           isSelected
@@ -962,6 +1129,24 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Custom Slider Bar */}
+              <div className="mt-4 flex flex-col items-center gap-2 border-t border-white/5 pt-4">
+                <div className="w-full flex items-center gap-3">
+                  <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">A</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={scrollProgress}
+                    onChange={handleSliderChange}
+                    className="flex-1 accent-[#D4AF37] cursor-pointer h-1 bg-white/10 rounded-full"
+                    title="Slide to scroll Alphabet"
+                  />
+                  <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Z</span>
+                </div>
               </div>
             </div>
 
@@ -1022,33 +1207,83 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         </div>
       </div>
 
-      {renderCubeSection("Live Map", 0)}
+      {/* View Mode Switcher */}
+      <div className="max-w-[1600px] mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-6 mb-12 p-8 bg-[#121212] border border-[#D4AF37]/20 rounded-3xl shadow-xl">
+        <div className="flex flex-col gap-1.5 self-start sm:self-center">
+          <span className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+            <Box className="w-6 h-6 text-[#D4AF37]" />
+            Cipher Configuration Mode
+          </span>
+          <span className="text-xs font-bold text-white/40 uppercase tracking-widest pl-9">
+            Toggle between flat grid matrix (Live + Decoys) and 6-sided individual cube faces
+          </span>
+        </div>
 
-      {/* Generate Codes Button */}
-      <div className="max-w-[1600px] mx-auto w-full flex justify-center mb-12">
-        <button
-          onClick={generateAllCodes}
-          disabled={!isLiveMapComplete || isSaving}
-          className={`px-16 py-6 rounded-2xl font-black text-2xl uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center gap-4 ${
-            isLiveMapComplete 
-              ? 'bg-white text-black hover:scale-105 active:scale-95 shadow-white/10 cursor-pointer' 
-              : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-          } ${isSaving ? 'animate-pulse opacity-50' : ''}`}
-        >
-          {isSaving ? 'Saving Data...' : (
-            <>
-              <Zap className={`w-6 h-6 ${isLiveMapComplete ? 'text-black' : 'text-white/20'}`} />
-              Generate Codes
-            </>
-          )}
-        </button>
+        <div className="flex bg-black/60 p-1.5 rounded-2xl border border-white/10 w-full sm:max-w-md shadow-inner">
+          <button
+            onClick={() => {
+              setViewMode('live-decoy');
+              localStorage.setItem('atlas_cipher_view_mode', 'live-decoy');
+            }}
+            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${
+              viewMode === 'live-decoy' 
+                ? 'bg-[#D4AF37] text-black font-black shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
+                : 'text-white/40 hover:text-white'
+            }`}
+          >
+            Live Map & Decoys
+          </button>
+          <button
+            onClick={() => {
+              setViewMode('cube-faces');
+              localStorage.setItem('atlas_cipher_view_mode', 'cube-faces');
+            }}
+            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${
+              viewMode === 'cube-faces' 
+                ? 'bg-[#D4AF37] text-black font-black shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
+                : 'text-white/40 hover:text-white'
+            }`}
+          >
+            Cube Faces
+          </button>
+        </div>
       </div>
 
-      {renderCubeSection("Decoy 1", 10)}
-      {renderCubeSection("Decoy 2", 20)}
-      {renderCubeSection("Decoy 3", 30)}
-      {renderCubeSection("Decoy 4", 40)}
-      {renderCubeSection("Decoy 5", 50)}
+      {viewMode === 'live-decoy' ? (
+        <>
+          {renderCubeSection("Live Map", 0)}
+
+          {/* Generate Codes Button */}
+          <div className="max-w-[1600px] mx-auto w-full flex justify-center mb-12">
+            <button
+              onClick={generateAllCodes}
+              disabled={!isLiveMapComplete || isSaving}
+              className={`px-16 py-6 rounded-2xl font-black text-2xl uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center gap-4 ${
+                isLiveMapComplete 
+                  ? 'bg-white text-black hover:scale-105 active:scale-95 shadow-white/10 cursor-pointer' 
+                  : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
+              } ${isSaving ? 'animate-pulse opacity-50' : ''}`}
+            >
+              {isSaving ? 'Saving Data...' : (
+                <>
+                  <Zap className={`w-6 h-6 ${isLiveMapComplete ? 'text-black' : 'text-white/20'}`} />
+                  Generate Codes
+                </>
+              )}
+            </button>
+          </div>
+
+          {renderCubeSection("Decoy 1", 10)}
+          {renderCubeSection("Decoy 2", 20)}
+          {renderCubeSection("Decoy 3", 30)}
+          {renderCubeSection("Decoy 4", 40)}
+          {renderCubeSection("Decoy 5", 50)}
+        </>
+      ) : (
+        <>
+          {Array.from({ length: 10 }, (_, i) => renderCubeFacesSection(i + 1))}
+        </>
+      )}
 
       {activeRiddleEditIndex !== null && (
         <div 
