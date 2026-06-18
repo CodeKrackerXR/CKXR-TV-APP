@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ASSETS } from '../constants';
 import { VaultButton } from './VaultButton';
-import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check, X } from 'lucide-react';
+import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check, X, Sliders } from 'lucide-react';
 
 
 import { initializeApp } from 'firebase/app';
@@ -199,12 +199,48 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     }));
   });
 
-  const [shift, setShift] = useState<number>(() => {
-    const savedShift = localStorage.getItem('atlas_session_shift');
-    return savedShift ? parseInt(savedShift) : 3;
+  const [activeShiftTarget, setActiveShiftTarget] = useState<string>('stage1');
+
+  const [shifts, setShifts] = useState<{ [key: string]: number }>(() => {
+    const savedShifts = localStorage.getItem('atlas_session_shifts_v2');
+    if (savedShifts) {
+      try {
+        const parsed = JSON.parse(savedShifts);
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
+      } catch (e) {
+        console.error("Failed to parse saved shifts", e);
+      }
+    }
+    const oldShift = localStorage.getItem('atlas_session_shift');
+    const baseShift = oldShift ? parseInt(oldShift) : 3;
+    const initial: { [key: string]: number } = { stage1: baseShift };
+    for (let i = 1; i <= 10; i++) {
+      initial[`cube-${i}`] = baseShift;
+    }
+    return initial;
   });
 
-  const [selectedLetter, setSelectedLetter] = useState<string>('C');
+  const getCubeShift = (cardIndex: number): number => {
+    const cubeNum = (cardIndex % 10) + 1;
+    return shifts[`cube-${cubeNum}`] ?? shifts.stage1 ?? 3;
+  };
+
+  const [selectedLetters, setSelectedLetters] = useState<{ [key: string]: string }>(() => {
+    const savedLetters = localStorage.getItem('atlas_session_letters_v2');
+    if (savedLetters) {
+      try {
+        const parsed = JSON.parse(savedLetters);
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
+      } catch (e) {
+        console.error("Failed to parse saved letters", e);
+      }
+    }
+    return { stage1: 'C' };
+  });
   const [viewMode, setViewMode] = useState<'live-decoy' | 'cube-faces'>(() => {
     return (localStorage.getItem('atlas_cipher_view_mode') as 'live-decoy' | 'cube-faces') || 'live-decoy';
   });
@@ -335,13 +371,14 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     saveToLocalStorage();
   };
 
-  // Autosave to localStorage whenever cubes or shift change
+  // Autosave to localStorage whenever cubes or shifts change
   useEffect(() => {
     // We only save if we have actual data to avoid overwriting on initial mount if state is empty
     // but here we have a default state of 60 cubes, so we can save.
     const enrichedCubes = cubes.map((c, i) => {
-      const shiftedL = getShiftedLetter(c.letter, shift);
-      const shiftedN = getShiftedNumber(c.number, shift);
+      const currentShift = getCubeShift(i);
+      const shiftedL = getShiftedLetter(c.letter, currentShift);
+      const shiftedN = getShiftedNumber(c.number, currentShift);
       const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
       return {
         ...c,
@@ -354,8 +391,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     
     localStorage.setItem('atlas_live_map_codes', JSON.stringify(liveMapCodesList));
     localStorage.setItem('atlas_session_cubes', JSON.stringify(enrichedCubes));
-    localStorage.setItem('atlas_session_shift', shift.toString());
-  }, [cubes, shift]);
+    localStorage.setItem('atlas_session_shift', (shifts.stage1 ?? 3).toString());
+    localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(shifts));
+  }, [cubes, shifts]);
 
   const cubeRefs = useRef<{ letter: HTMLInputElement | null; number: HTMLInputElement | null; episode: HTMLInputElement | null; sponsorAd: HTMLInputElement | null; rotation: HTMLInputElement | null }[]>(
     Array.from({ length: 60 }, () => ({ letter: null, number: null, episode: null, sponsorAd: null, rotation: null }))
@@ -367,10 +405,11 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     const outputs: string[] = [];
     const duplicates = new Set<string>();
     
-    cubes.forEach((cube) => {
+    cubes.forEach((cube, i) => {
       if (cube.letter && cube.number) {
-        const shiftedL = getShiftedLetter(cube.letter, shift);
-        const shiftedN = getShiftedNumber(cube.number, shift);
+        const currentShift = getCubeShift(i);
+        const shiftedL = getShiftedLetter(cube.letter, currentShift);
+        const shiftedN = getShiftedNumber(cube.number, currentShift);
         const code = `${shiftedL}${shiftedN}`;
         if (outputs.includes(code)) {
           duplicates.add(code);
@@ -379,15 +418,16 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       }
     });
     return duplicates;
-  }, [cubes, shift]);
+  }, [cubes, shifts]);
 
   const { result, mapping } = useMemo(() => {
     const cleanText = inputText.toUpperCase().replace(/[^A-Z]/g, '');
     let res = '';
     const map: { [key: string]: string } = {};
 
+    const currentShift = shifts[activeShiftTarget] ?? 3;
     ALPHABET.forEach((l, i) => {
-      const targetIdx = (i + (mode === 'ENCODE' ? shift : 26 - shift)) % 26;
+      const targetIdx = (i + (mode === 'ENCODE' ? currentShift : 26 - currentShift)) % 26;
       map[l] = ALPHABET[targetIdx];
     });
 
@@ -396,7 +436,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     }
 
     return { result: res, mapping: map };
-  }, [inputText, shift, mode]);
+  }, [inputText, shifts, activeShiftTarget, mode]);
 
   // Mapping A=1, B=2... J=10, K=1
   const letterToNumber10 = (char: string) => {
@@ -476,11 +516,18 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                 }, 0);
               }
             } else {
-              // Decoys: advance to next cube's letter
+              // Decoys: advance to next cube's letter (or next face's letter in cube-faces mode)
               const focusNext = () => {
-                const nextIdx = index + 1;
-                if (nextIdx < 60) {
-                  cubeRefs.current[nextIdx]?.letter?.focus();
+                if (viewMode === 'cube-faces') {
+                  const nextIdx = index + 10;
+                  if (nextIdx < 60) {
+                    cubeRefs.current[nextIdx]?.letter?.focus();
+                  }
+                } else {
+                  const nextIdx = index + 1;
+                  if (nextIdx < 60) {
+                    cubeRefs.current[nextIdx]?.letter?.focus();
+                  }
                 }
               };
               if (val === '1') {
@@ -529,9 +576,16 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
           if (val !== '' && val !== prevVal) {
             const focusNextCube = () => {
-              const nextIdx = index + 1;
-              if (nextIdx < 60) {
-                cubeRefs.current[nextIdx]?.letter?.focus();
+              if (viewMode === 'cube-faces') {
+                const nextIdx = index + 10;
+                if (nextIdx < 60) {
+                  cubeRefs.current[nextIdx]?.letter?.focus();
+                }
+              } else {
+                const nextIdx = index + 1;
+                if (nextIdx < 60) {
+                  cubeRefs.current[nextIdx]?.letter?.focus();
+                }
               }
             };
             if (val.length === 3 || ['0', '90', '180', '270'].includes(val)) {
@@ -553,8 +607,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
   const saveToLocalStorage = () => {
     // Generate liveMapCodesList for consistency with what Game Page expects
     const enrichedCubes = cubes.map((c, i) => {
-      const shiftedL = getShiftedLetter(c.letter, shift);
-      const shiftedN = getShiftedNumber(c.number, shift);
+      const currentShift = getCubeShift(i);
+      const shiftedL = getShiftedLetter(c.letter, currentShift);
+      const shiftedN = getShiftedNumber(c.number, currentShift);
       const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
       return {
         ...c,
@@ -567,7 +622,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     
     localStorage.setItem('atlas_live_map_codes', JSON.stringify(liveMapCodesList));
     localStorage.setItem('atlas_session_cubes', JSON.stringify(enrichedCubes));
-    localStorage.setItem('atlas_session_shift', shift.toString());
+    localStorage.setItem('atlas_session_shift', (shifts.stage1 ?? 3).toString());
+    localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(shifts));
   };
 
   const generateAllCodes = async () => {
@@ -625,8 +681,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
         // 10 Cipher Outputs from Live Map
         const enrichedCubes = newCubes.map((c, i) => {
-          const shiftedL = getShiftedLetter(c.letter, shift);
-          const shiftedN = getShiftedNumber(c.number, shift);
+          const currentShift = getCubeShift(i);
+          const shiftedL = getShiftedLetter(c.letter, currentShift);
+          const shiftedN = getShiftedNumber(c.number, currentShift);
           const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
           return {
             ...c,
@@ -652,13 +709,15 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             timestamp: new Date().toISOString(),
             codes: codesToSave,
             cipherOutputs,
-            shift
+            shift: shifts.stage1 ?? 3,
+            shifts
           });
           
           // Save to localStorage for the Game Page to access during preview
           localStorage.setItem('atlas_live_map_codes', JSON.stringify(liveMapCodesList));
           localStorage.setItem('atlas_session_cubes', JSON.stringify(enrichedCubes));
-          localStorage.setItem('atlas_session_shift', shift.toString());
+          localStorage.setItem('atlas_session_shift', (shifts.stage1 ?? 3).toString());
+          localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(shifts));
 
           console.log("Session saved successfully to Firestore and localStorage.");
         } catch (e) {
@@ -673,8 +732,9 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
   const renderCubeCard = (idx: number, faceNumber?: number) => {
     const cube = cubes[idx];
     if (!cube) return null;
-    const shiftedL = getShiftedLetter(cube.letter, shift);
-    const shiftedN = getShiftedNumber(cube.number, shift);
+    const currentShift = getCubeShift(idx);
+    const shiftedL = getShiftedLetter(cube.letter, currentShift);
+    const shiftedN = getShiftedNumber(cube.number, currentShift);
     const code = `${shiftedL}${shiftedN}`;
     
     const isLiveMap = idx < 10;
@@ -684,23 +744,23 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     const isDecoy5 = idx >= 50 && idx < 60;
     const isGoldHighlight = isLiveMap || isDecoy5;
 
+    const cubeNumForCard = (idx % 10) + 1;
+    const cubeKey = `cube-${cubeNumForCard}`;
+    const cardSelectedLetter = selectedLetters[cubeKey] || '?';
+
     return (
-      <div key={idx} className={`bg-black/40 border-2 rounded-3xl p-8 flex flex-col gap-6 group transition-all hover:bg-black/60 shadow-xl ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-red-500 bg-red-500/5') : 'border-white/5 hover:border-[#D4AF37]/30'}`}>
+      <div key={idx} className={`bg-black/40 border-2 rounded-3xl p-4 sm:p-6 flex flex-col gap-5 group transition-all hover:bg-black/60 shadow-xl ${isDuplicate ? (isGoldHighlight ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-red-500 bg-red-500/5') : 'border-white/5 hover:border-[#D4AF37]/30'}`}>
         <div className="flex flex-col items-center justify-center pb-4 border-b border-white/5 mb-2">
-          {faceNumber ? (
-            <div className="flex flex-col items-center justify-center text-center">
-              <span className="text-2xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                Cube {idx + 1}
-              </span>
-              <span className="text-white text-base font-black uppercase tracking-[0.1em] mt-1">
-                Face {faceNumber}
-              </span>
-            </div>
-          ) : (
-            <span className="text-2xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)] text-center w-full min-h-[40px] flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center text-center">
+            <span className="text-2xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
               Cube {idx + 1}
             </span>
-          )}
+            {faceNumber && (
+              <span className="text-white/60 text-sm font-black uppercase tracking-[0.1em] mt-1">
+                Face {faceNumber}
+              </span>
+            )}
+          </div>
           {isDuplicate && (
             <div className={`flex items-center gap-1 animate-pulse mt-2 px-3 py-1 rounded-full border ${isGoldHighlight ? 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
               <Info className="w-3 h-3" />
@@ -801,10 +861,10 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         )}
 
         {(isLiveMap || rowPosLabel) && (
-          <div className="mt-2 flex flex-col gap-5 p-6 bg-black/60 rounded-3xl border border-white/5 shadow-inner group-hover:bg-black/80 transition-all">
+          <div className="mt-2 flex flex-col gap-4 p-4 sm:p-5 bg-black/60 rounded-3xl border border-white/5 shadow-inner group-hover:bg-black/80 transition-all">
             {isLiveMap && (
-              <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                 <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/20 leading-tight">Cipher<br/>Output:</span>
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                 <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/20 leading-tight">Cipher<br/>Output:</span>
                  <span className={`text-4xl font-black font-mono tracking-widest italic ${isDuplicate ? (isGoldHighlight ? 'text-[#D4AF37]' : 'text-red-500') : 'text-[#D4AF37]'}`}>
                   {shiftedL || '-'}{shiftedN || '-'}
                 </span>
@@ -812,31 +872,31 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             )}
 
             {isLiveMap && (
-              <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
-                 <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#D4AF37]/60 text-center">
+              <div className="flex flex-col gap-3 border-b border-white/5 pb-3">
+                 <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#D4AF37]/60 text-center">
                   Final Cube Face
                 </span>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                     <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Letter</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                     <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.15em] text-center whitespace-nowrap">Letter</span>
                     <input
                       type="text"
                       value={cube.finalLetter || ''}
                       onChange={(e) => handleCubeChange(idx, 'finalLetter', e.target.value)}
                       placeholder="A"
                       maxLength={1}
-                      className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
+                      className="w-full bg-black/60 border-2 border-[#22c55e]/30 rounded-2xl py-3 px-1 text-center font-black text-2xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e] hover:border-[#22c55e]/50"
                     />
                   </div>
-                  <div className="flex flex-col gap-2">
-                     <span className="text-xs font-black text-white/30 uppercase tracking-[0.2em] ml-1 text-center">Number</span>
+                  <div className="flex flex-col gap-1.5">
+                     <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.15em] text-center whitespace-nowrap">Number</span>
                     <input
                       type="text"
                       value={cube.finalNumber || ''}
                       onChange={(e) => handleCubeChange(idx, 'finalNumber', e.target.value)}
                       placeholder="1-10"
                       maxLength={2}
-                      className="w-full bg-black/60 border-2 border-white/10 rounded-2xl p-4 text-center font-black text-3xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e]"
+                      className="w-full bg-black/60 border-2 border-[#22c55e]/30 rounded-2xl py-3 px-1 text-center font-black text-2xl text-[#22c55e] focus:outline-none transition-all placeholder:opacity-20 focus:border-[#22c55e] hover:border-[#22c55e]/50"
                     />
                   </div>
                 </div>
@@ -867,12 +927,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
               {title}
             </h3>
             
-            {/* Controls Row: Key Ref + Save Info Button */}
+            {/* Controls Row: Save Info Button */}
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-3 bg-[#22c55e]/10 border border-[#22c55e]/30 px-6 py-3 rounded-xl select-none">
-                 <span className="text-[10px] font-black text-[#22c55e]/60 uppercase tracking-widest">Key Ref</span>
-                 <span className="text-3xl font-black text-[#22c55e] italic leading-none">{selectedLetter}{shift}</span>
-              </div>
 
               <button
                 onClick={() => handleSaveSection(startIndex)}
@@ -925,19 +981,22 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     return (
       <div key={cubeNum} className="max-w-[1600px] mx-auto w-full mb-12 animate-in fade-in duration-300">
         <div className="bg-[#121212] border border-[#D4AF37]/20 rounded-3xl p-10 shadow-2xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-            <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-4">
-              <Activity className="w-8 h-8 text-[#D4AF37]" />
-              Cube {cubeNum} - All Faces
-            </h3>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+            <div className="w-full md:w-1/3 flex justify-center md:justify-start">
+              <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-4">
+                <Activity className="w-8 h-8 text-[#D4AF37]" />
+                Cube {cubeNum} - All Faces
+              </h3>
+            </div>
             
-            {/* Controls Row: Key Ref + Save Info Button */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-3 bg-[#22c55e]/10 border border-[#22c55e]/30 px-6 py-3 rounded-xl select-none">
-                 <span className="text-[10px] font-black text-[#22c55e]/60 uppercase tracking-widest">Key Ref</span>
-                 <span className="text-3xl font-black text-[#22c55e] italic leading-none">{selectedLetter}{shift}</span>
-              </div>
+            {/* Centered Yellow Key Ref (No Box) */}
+            <div className="w-full md:w-1/3 flex justify-center text-center select-none">
+              <span className="text-3xl font-black text-[#D4AF37] italic uppercase tracking-[0.15em]">
+                Key Ref {(selectedLetters[`cube-${cubeNum}`] || '?')}{shifts[`cube-${cubeNum}`] ?? 3}
+              </span>
+            </div>
 
+            <div className="w-full md:w-1/3 flex justify-center md:justify-end">
               <button
                 onClick={() => handleSaveCube(cubeNum)}
                 className={`px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 flex items-center gap-2.5 shadow-lg select-none ${
@@ -1018,6 +1077,59 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column */}
         <div className="lg:col-span-4 space-y-6">
+          {/* Key Coordinator */}
+          <div className="bg-[#121212] border border-[#D4AF37]/20 rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+              <Sliders className="w-5 h-5 text-[#D4AF37]" />
+              Key Coordinator
+            </h2>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-4 leading-relaxed">
+              Select a target below, then use the slider to set its custom rotation offset:
+            </p>
+
+            <div className="space-y-4">
+              {/* Stage 1 Option */}
+              <button
+                onClick={() => setActiveShiftTarget('stage1')}
+                className={`w-full py-3.5 rounded-xl text-sm font-black uppercase tracking-widest border transition-all flex items-center justify-between px-5 cursor-pointer ${
+                  activeShiftTarget === 'stage1'
+                    ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.25)] scale-[1.02]'
+                    : 'bg-black/30 text-white/70 border-white/10 hover:text-white hover:border-white/30'
+                }`}
+              >
+                <span>Stage 1 Wheel</span>
+                <span className={`text-sm px-2.5 py-1 rounded-md font-mono font-black ${activeShiftTarget === 'stage1' ? 'bg-black/10 text-black' : 'bg-white/10 text-[#D4AF37]'}`}>
+                  {(selectedLetters.stage1 || '?')}{shifts.stage1 ?? 3}
+                </span>
+              </button>
+
+              {/* Cube 1-10 Grid */}
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: 10 }, (_, i) => {
+                  const cubeKey = `cube-${i + 1}`;
+                  const isActive = activeShiftTarget === cubeKey;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setActiveShiftTarget(cubeKey)}
+                      className={`py-3 rounded-xl uppercase transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border ${
+                        isActive
+                          ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.25)] scale-105'
+                          : 'bg-black/30 text-white/60 border-white/5 hover:text-white hover:border-white/20'
+                      }`}
+                    >
+                      <span className="opacity-70 text-[11px] font-black tracking-wider">C{i + 1}</span>
+                      <span className={`font-mono text-center leading-none text-sm font-black ${isActive ? 'text-black' : 'text-[#D4AF37]'}`}>
+                        {(selectedLetters[cubeKey] || '?')}{shifts[cubeKey] ?? 3}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Cipher Core */}
           <div className="bg-[#121212] border border-[#D4AF37]/20 rounded-2xl p-6 shadow-2xl">
             <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-6 flex items-center gap-3">
               <Zap className="w-6 h-6 text-[#D4AF37]" />
@@ -1030,13 +1142,13 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                 <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
                   <button
                     onClick={() => setMode('ENCODE')}
-                    className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${mode === 'ENCODE' ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-white/40 hover:text-white'}`}
+                    className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all rounded-lg cursor-pointer ${mode === 'ENCODE' ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-white/40 hover:text-white'}`}
                   >
                     Encode
                   </button>
                   <button
                     onClick={() => setMode('DECODE')}
-                    className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${mode === 'DECODE' ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-white/40 hover:text-white'}`}
+                    className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all rounded-lg cursor-pointer ${mode === 'DECODE' ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-white/40 hover:text-white'}`}
                   >
                     Decode
                   </button>
@@ -1046,14 +1158,23 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
               <div>
                  <label className="flex justify-between items-center text-[10px] font-black text-[#D4AF37]/50 uppercase tracking-[0.2em] mb-3">
                    <span>Rotation Shift (Key)</span>
-                   <span className="text-[#D4AF37] text-sm">{shift}</span>
+                   <span className="text-[#D4AF37] text-sm font-black font-mono">
+                     {activeShiftTarget === 'stage1' ? 'STAGE 1' : `CUBE ${activeShiftTarget.split('-')[1]}`} : {shifts[activeShiftTarget] ?? 3}
+                   </span>
                  </label>
                  <input
                   type="range"
                   min="0"
                   max="25"
-                  value={shift}
-                  onChange={(e) => setShift(parseInt(e.target.value))}
+                  value={shifts[activeShiftTarget] ?? 3}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setShifts(prev => {
+                      const updated = { ...prev, [activeShiftTarget]: val };
+                      localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(updated));
+                      return updated;
+                    });
+                  }}
                   className="w-full accent-[#D4AF37] cursor-pointer h-1.5 bg-white/10 rounded-full"
                 />
                 <div className="flex justify-between text-[10px] text-white/20 font-black mt-2">
@@ -1063,30 +1184,16 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-black text-[#D4AF37]/50 uppercase tracking-[0.2em] mb-3 block">Input Sequence (Letters)</label>
-                <textarea
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value.toUpperCase())}
-                  className="w-full bg-black/40 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] transition-all resize-none h-32"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#1a0505] border border-[#441111] rounded-2xl p-6">
-            <h3 className="flex items-center gap-2 text-xs font-black text-[#ff4444] uppercase tracking-widest mb-4">
-              <Info className="w-4 h-4" />
-              Atlas Intelligence
-            </h3>
-            <div className="space-y-4">
-              <p className="text-[10px] text-white/60 leading-relaxed font-bold uppercase tracking-wider">
-                Stage 1 communication utilizes a standard alphanumeric rotation. The Atlas Cipher shifts each character by a specific frequency designated by the game master.
-              </p>
-              <div className="p-3 bg-black/40 border border-white/5 rounded-lg">
-                <div className="text-[9px] text-[#D4AF37] font-black uppercase mb-1">Current Key Reference</div>
-                <div className="text-xl font-black text-white italic">{selectedLetter}{shift}</div>
-              </div>
+              {activeShiftTarget === 'stage1' && (
+                <div>
+                  <label className="text-[10px] font-black text-[#D4AF37]/50 uppercase tracking-[0.2em] mb-3 block">Input Sequence (Letters)</label>
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value.toUpperCase())}
+                    className="w-full bg-black/40 border border-[#D4AF37]/20 rounded-xl p-4 font-mono text-lg text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] transition-all resize-none h-32"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1106,12 +1213,17 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                 className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide font-mono"
               >
                 {ALPHABET.map((l, i) => {
-                  const isSelected = l === selectedLetter;
+                  const activeLetter = selectedLetters[activeShiftTarget];
+                  const isSelected = activeLetter ? l === activeLetter : false;
                   return (
                     <div key={i} className="flex flex-col items-center gap-3 min-w-[32px]">
                       <button
                         onClick={() => {
-                          setSelectedLetter(l);
+                          setSelectedLetters(prev => {
+                            const updated = { ...prev, [activeShiftTarget]: l };
+                            localStorage.setItem('atlas_session_letters_v2', JSON.stringify(updated));
+                            return updated;
+                          });
                         }}
                         className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                           isSelected
@@ -1159,16 +1271,16 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
                  <div className="space-y-6">
                    <div className="flex justify-between items-center text-sm font-black uppercase tracking-widest">
                      <span className="text-white/40">Plaintext</span>
-                     <span className="text-white text-lg">{selectedLetter}</span>
+                     <span className="text-white text-lg">{selectedLetters[activeShiftTarget] || '-'}</span>
                    </div>
                    <div className="flex justify-between items-center text-sm font-black uppercase tracking-widest">
                      <span className="text-[#D4AF37]/40">Mapped Letter</span>
-                     <span className="text-[#D4AF37] text-3xl">{mapping[selectedLetter]}</span>
+                     <span className="text-[#D4AF37] text-3xl">{selectedLetters[activeShiftTarget] ? (mapping[selectedLetters[activeShiftTarget]] || '-') : '-'}</span>
                    </div>
                    <div className="h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/5">
                      <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${((shift) / 25) * 100}%` }}
+                        animate={{ width: `${(((shifts[activeShiftTarget] ?? 3)) / 25) * 100}%` }}
                         className="h-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]"
                      />
                    </div>
@@ -1177,31 +1289,33 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
 
               <div className="bg-black/20 rounded-2xl p-6 border border-white/5 flex items-center">
                  <p className="text-xs text-white/50 font-bold uppercase leading-relaxed italic border-l-4 border-[#D4AF37] pl-6 py-2">
-                   "The shift value of {shift} determines the character offset. Each letter is converted to its respective position in the alphabet plus the key value."
+                   "The shift value of {shifts[activeShiftTarget] ?? 3} determines the character offset. Each letter is converted to its respective position in the alphabet plus the key value."
                  </p>
               </div>
             </div>
 
-            <div className="pt-10 border-t border-white/5">
-               <div className="text-[10px] text-center font-black text-[#D4AF37]/40 uppercase tracking-[0.3em] mb-6">Generated Atlas Sequence</div>
-               <div className="flex flex-col md:flex-row items-center gap-8">
-                  <div className="flex-1 w-full bg-black/60 border-2 border-[#D4AF37] rounded-3xl p-8 shadow-[0_0_40px_rgba(212,175,55,0.15)] flex flex-col items-center justify-center min-h-[160px]">
-                     <div className="text-4xl md:text-5xl font-black text-[#D4AF37] tracking-[0.1em] text-center leading-tight font-mono break-all px-4">
-                       {result || '---'}
-                     </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => {
-                      saveToLocalStorage();
-                      onPlay?.({ code: result, shift });
-                    }}
-                    className="w-full md:w-auto h-20 px-12 bg-white text-black font-black text-xl uppercase tracking-[0.2em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] whitespace-nowrap"
-                  >
-                    Play Atlas
-                  </button>
-               </div>
-            </div>
+            {activeShiftTarget === 'stage1' && (
+              <div className="pt-10 border-t border-white/5">
+                 <div className="text-[10px] text-center font-black text-[#D4AF37]/40 uppercase tracking-[0.3em] mb-6">Generated Atlas Sequence</div>
+                 <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="flex-1 w-full bg-black/60 border-2 border-[#D4AF37] rounded-3xl p-8 shadow-[0_0_40px_rgba(212,175,55,0.15)] flex flex-col items-center justify-center min-h-[160px]">
+                       <div className="text-4xl md:text-5xl font-black text-[#D4AF37] tracking-[0.1em] text-center leading-tight font-mono break-all px-4">
+                         {result || '---'}
+                       </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        saveToLocalStorage();
+                        onPlay?.({ code: result, shift: shifts.stage1 ?? 3 });
+                      }}
+                      className="w-full md:w-auto h-20 px-12 bg-white text-black font-black text-xl uppercase tracking-[0.2em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] whitespace-nowrap"
+                    >
+                      Play Atlas
+                    </button>
+                 </div>
+              </div>
+            )}
           </div>
 
         </div>
