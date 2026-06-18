@@ -88,6 +88,9 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
   const [pickedStageLetters, setPickedStageLetters] = useState<Set<string>>(new Set());
   const [checkCodeStatus, setCheckCodeStatus] = useState<"idle" | "success" | "fail">("idle");
 
+  const [selectedCubeNum, setSelectedCubeNum] = useState<number | null>(null);
+  const [showCubeSelectionModal, setShowCubeSelectionModal] = useState(false);
+
   const getShiftedNumber = (numStr: string, s: number) => {
     const num = parseInt(numStr);
     if (isNaN(num)) return "";
@@ -107,16 +110,21 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
   }, [selectedStageLetter, shift]);
 
   const handleCheckCode = () => {
+    if (selectedCubeNum === null) {
+      setShowCubeSelectionModal(true);
+      return;
+    }
+
     const savedCodes = JSON.parse(localStorage.getItem('atlas_live_map_codes') || '[]');
     const savedCubes = JSON.parse(localStorage.getItem('atlas_session_cubes') || '[]');
 
-    const matchIndex = savedCodes.indexOf(currentCenterCode);
+    const cubeIndex = selectedCubeNum - 1;
+    const targetCoordinate = savedCodes[cubeIndex] || "";
+    const matchedCube = savedCubes[cubeIndex];
 
     if (currentStage === 2) {
-      if (matchIndex !== -1 && matchIndex < 10) {
+      if (matchedCube && currentCenterCode === targetCoordinate) {
         setCheckCodeStatus("success");
-        
-        const matchedCube = savedCubes[matchIndex];
         const cipherCode = matchedCube.cipherOutput || "";
 
         setStage2NewCode(cipherCode);
@@ -134,11 +142,9 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
         setStage2Riddle("");
       }
     } else if (currentStage === 3) {
-      // Confirm what is posted in the new code box on stage 3
-      if (stage3NewCode && currentCenterCode === stage3NewCode) {
+      const finalCubeFaceCode = (matchedCube ? `${matchedCube.finalLetter || ""}${matchedCube.finalNumber || ""}` : "").toUpperCase();
+      if (finalCubeFaceCode && currentCenterCode.toUpperCase() === finalCubeFaceCode) {
         setCheckCodeStatus("success");
-        // Look up the cube data to reveal extra info
-        const matchedCube = savedCubes.find((c: any) => c.cipherOutput === currentCenterCode);
         if (matchedCube) {
           setStage3SponsorAd("Ad Sponsor " + (matchedCube.sponsorAd || ""));
           setStage3Position(matchedCube.identificationLabel || "");
@@ -832,7 +838,41 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
         </div>
 
         <div className="w-full max-w-xl space-y-8">
-          <div className="mb-6">
+          <div className="mb-6 space-y-4">
+            {(currentStage === 2 || currentStage === 3) && (
+              <div className="space-y-2 animate-in fade-in duration-300">
+                <div className="flex justify-between items-center bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">
+                    Target Cube Selection
+                  </span>
+                  {selectedCubeNum && (
+                     <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                       Active Target: Cube {selectedCubeNum}
+                     </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-10 gap-1 sm:gap-1.5">
+                  {Array.from({ length: 10 }, (_, idx) => {
+                    const nr = idx + 1;
+                    const isSel = selectedCubeNum === nr;
+                    return (
+                      <button
+                        key={nr}
+                        type="button"
+                        onClick={() => setSelectedCubeNum(nr)}
+                        className={`py-2 rounded-lg text-xs font-mono font-black select-none transition-all cursor-pointer ${
+                          isSel
+                            ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-110 border border-[#D4AF37]'
+                            : 'bg-black/40 text-white/60 border border-white/10 hover:text-white hover:border-white/30 font-mono'
+                        }`}
+                      >
+                        C{nr}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <h2 className="text-xl md:text-3xl font-black uppercase tracking-[0.2em] leading-tight text-center lg:text-left">
               {isSolved ? (
                 <span className="text-[#22c55e]">Target Resolved! Atlas Code Cracked</span>
@@ -867,6 +907,9 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                   setSelectedStageLetter("A");
                   setPickedStageLetters(new Set());
                   setHasInteractedWithWheel(false);
+                  if (s === 1) {
+                    setSelectedCubeNum(null);
+                  }
                 }}
                 className={`py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
                   currentStage === s 
@@ -1085,6 +1128,61 @@ export const AtlasGamePage: React.FC<AtlasGamePageProps> = ({
                 Close Riddle
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Force Cube Selection Modal */}
+      {showCubeSelectionModal && (
+        <div 
+          className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[100] p-4"
+          onClick={() => setShowCubeSelectionModal(false)}
+        >
+          <div 
+            className="bg-[#0e0e0e] border-2 border-[#D4AF37] rounded-[2rem] w-full max-w-md p-8 relative flex flex-col items-center gap-6 shadow-[0_0_50px_rgba(212,175,55,0.25)] animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button top right */}
+            <button
+              type="button"
+              onClick={() => setShowCubeSelectionModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors cursor-pointer p-2 rounded-full hover:bg-white/5"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center">
+              <span className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.4em] block mb-2">Required Action</span>
+              <h4 className="text-xl font-black text-white uppercase tracking-wider">Select Target Cube</h4>
+              <p className="text-white/40 text-xs mt-2 font-medium">Please choose the Cube you want to decrypt first.</p>
+            </div>
+
+            <div className="grid grid-cols-5 gap-3 w-full my-3">
+              {Array.from({ length: 10 }, (_, idx) => {
+                const nr = idx + 1;
+                return (
+                  <button
+                    key={nr}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCubeNum(nr);
+                      setShowCubeSelectionModal(false);
+                    }}
+                    className="h-14 rounded-xl bg-black/60 border border-white/10 text-[#D4AF37] hover:bg-white hover:text-black font-black text-lg font-mono transition-all duration-150 active:scale-90 cursor-pointer"
+                  >
+                    C{nr}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowCubeSelectionModal(false)}
+              className="mt-2 w-full py-3.5 rounded-xl border border-white/10 hover:border-white/30 text-white/60 hover:text-white font-extrabold uppercase text-[11px] tracking-widest transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
