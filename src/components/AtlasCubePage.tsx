@@ -935,13 +935,39 @@ export const AtlasCubePage: React.FC<AtlasCubePageProps> = ({ onBack }) => {
                           {/* Drop Preview Area */}
                           <div className="aspect-square w-full rounded-xl overflow-hidden bg-black relative border border-white/5 shadow-inner mb-3 group-hover:border-white/10 transition-all">
                             {f.image ? (
-                              <div className="w-full h-full p-2 flex items-center justify-center">
+                              <div 
+                                className="w-full h-full p-2 flex items-center justify-center cursor-pointer group/img-container relative"
+                                title="Double-click to replace image"
+                                onDoubleClick={() => {
+                                  const inputEl = document.getElementById(`replace-image-input-${idx}`);
+                                  if (inputEl) {
+                                    inputEl.click();
+                                  }
+                                }}
+                              >
                                 <img 
                                   src={f.image} 
                                   alt={f.name} 
-                                  className="max-w-full max-h-full object-contain transition-transform duration-300 shadow-md"
+                                  className="max-w-full max-h-full object-contain transition-transform duration-300 shadow-md group-hover/img-container:opacity-30"
                                   style={{ transform: `rotate(${f.rotation}deg)` }}
                                   referrerPolicy="no-referrer"
+                                />
+                                {/* Elegant Hover Overlay */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover/img-container:opacity-100 transition-opacity duration-200 bg-black/60 p-2 text-center pointer-events-none">
+                                  <Upload className="w-6 h-6 text-[#D4AF37] mb-1 animate-pulse" />
+                                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-white font-black">Double-Click</span>
+                                  <span className="text-[8px] font-mono uppercase tracking-[0.1em] text-[#D4AF37] font-bold">To Replace</span>
+                                </div>
+                                <input 
+                                  type="file"
+                                  id={`replace-image-input-${idx}`}
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleImageUpload(idx, e.target.files[0]);
+                                    }
+                                  }}
+                                  className="hidden"
                                 />
                               </div>
                             ) : (

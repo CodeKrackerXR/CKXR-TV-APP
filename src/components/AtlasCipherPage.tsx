@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ASSETS } from '../constants';
 import { VaultButton } from './VaultButton';
-import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check, X, Sliders } from 'lucide-react';
+import { ShieldCheck, ChevronLeft, Info, Zap, RotateCw, Activity, Box, Save, Check, X, Sliders, Sparkles, Shuffle, Copy } from 'lucide-react';
 
 
 import { initializeApp } from 'firebase/app';
@@ -135,6 +135,125 @@ const getRowPosLabel = (idx: number) => {
 };
 
 
+const DEFAULT_CHART_SHIFTS: { [key: string]: number } = {
+  stage1: 3,
+  'cube-1': 10,
+  'cube-2': 11,
+  'cube-3': 7,
+  'cube-4': 12,
+  'cube-5': 4,
+  'cube-6': 9,
+  'cube-7': 3,
+  'cube-8': 8,
+  'cube-9': 5,
+  'cube-10': 6
+};
+
+const DEFAULT_CHART_LETTERS: { [key: string]: string } = {
+  stage1: 'C',
+  'cube-1': 'E',
+  'cube-2': 'D',
+  'cube-3': 'J',
+  'cube-4': 'F',
+  'cube-5': 'B',
+  'cube-6': 'I',
+  'cube-7': 'H',
+  'cube-8': 'C',
+  'cube-9': 'G',
+  'cube-10': 'A'
+};
+
+const STATIC_CUBES_DATA = [
+  // Live Map (Index 0-9)
+  { letter: 'Z', number: '9', episode: '2', riddle: 'Riddle 1', sponsorAd: '3', rotation: '90', finalLetter: 'A', finalNumber: '4' },
+  { letter: 'W', number: '3', episode: '3', riddle: 'Riddle 2', sponsorAd: '4', rotation: '180', finalLetter: 'A', finalNumber: '6' },
+  { letter: 'Q', number: '7', episode: '5', riddle: 'Riddle 3', sponsorAd: '6', rotation: '270', finalLetter: 'A', finalNumber: '3' },
+  { letter: 'X', number: '10', episode: '7', riddle: 'Riddle 4', sponsorAd: '8', rotation: '90', finalLetter: 'A', finalNumber: '9' },
+  { letter: 'V', number: '10', episode: '9', riddle: 'Riddle 5', sponsorAd: '1', rotation: '45', finalLetter: 'A', finalNumber: '1' },
+  { letter: 'M', number: '5', episode: '1', riddle: 'Riddle 6', sponsorAd: '2', rotation: '0', finalLetter: 'B', finalNumber: '2' },
+  { letter: 'P', number: '4', episode: '4', riddle: 'Riddle 7', sponsorAd: '5', rotation: '90', finalLetter: 'B', finalNumber: '5' },
+  { letter: 'K', number: '6', episode: '6', riddle: 'Riddle 8', sponsorAd: '7', rotation: '180', finalLetter: 'B', finalNumber: '8' },
+  { letter: 'L', number: '2', episode: '8', riddle: 'Riddle 9', sponsorAd: '9', rotation: '270', finalLetter: 'B', finalNumber: '1' },
+  { letter: 'S', number: '8', episode: '10', riddle: 'Riddle 10', sponsorAd: '10', rotation: '120', finalLetter: 'B', finalNumber: '9' },
+  
+  // Decoy 1 (Index 10-19)
+  { letter: 'F', number: '6', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'I', number: '3', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'Z', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'W', number: '2', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'N', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'B', number: '3', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'T', number: '8', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'S', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'P', number: '8', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'W', number: '5', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+
+  // Decoy 2 (Index 20-29)
+  { letter: 'N', number: '2', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'U', number: '8', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'G', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'J', number: '4', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'E', number: '5', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'T', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'C', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'F', number: '1', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'Y', number: '7', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'W', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+
+  // Decoy 3 (Index 30-39)
+  { letter: 'H', number: '9', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'Y', number: '9', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'S', number: '1', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'L', number: '7', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'S', number: '2', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'Q', number: '4', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'V', number: '8', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'A', number: '7', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'U', number: '1', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'Q', number: '3', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+
+  // Decoy 4 (Index 40-49)
+  { letter: 'E', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'O', number: '4', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'K', number: '1', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'R', number: '7', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'L', number: '3', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'L', number: '6', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'T', number: '1', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'D', number: '3', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'T', number: '5', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'U', number: '9', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+
+  // Decoy 5 (Index 50-59)
+  { letter: 'C', number: '4', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'F', number: '4', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'O', number: '2', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'I', number: '10', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'N', number: '6', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'J', number: '6', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'M', number: '8', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'U', number: '7', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'F', number: '8', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' },
+  { letter: 'S', number: '9', episode: '', riddle: '', sponsorAd: '', rotation: '', finalLetter: '', finalNumber: '' }
+];
+
+const getEnrichedStaticCubes = (currentShifts: { [key: string]: number }) => {
+  return STATIC_CUBES_DATA.map((c, i) => {
+    const cubeNum = (i % 10) + 1;
+    const currentShift = currentShifts[`cube-${cubeNum}`] ?? currentShifts.stage1 ?? 3;
+    const shiftedL = getShiftedLetter(c.letter, currentShift);
+    const shiftedN = getShiftedNumber(c.number, currentShift);
+    const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
+    return {
+      ...c,
+      cipherOutput: `${shiftedL}${shiftedN}`,
+      identificationLabel: label,
+      riddleNumber: (i + 1).toString()
+    };
+  });
+};
+
+
 export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtuber, onPlay, onGoToCube }) => {
   const [inputText, setInputText] = useState('CODE');
   const [mode, setMode] = useState<'ENCODE' | 'DECODE'>('ENCODE');
@@ -187,16 +306,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         console.error("Failed to parse saved cubes", e);
       }
     }
-    return Array.from({ length: 60 }, () => ({ 
-      letter: '', 
-      number: '',
-      episode: '',     // Live Map only
-      sponsorAd: '',   // Live Map only
-      rotation: '',    // Live Map only
-      finalLetter: '', // Final Cube Face - Live Map only
-      finalNumber: '', // Final Cube Face - Live Map only
-      riddle: ''       // Live Map only
-    }));
+    return getEnrichedStaticCubes(DEFAULT_CHART_SHIFTS);
   });
 
   const [activeShiftTarget, setActiveShiftTarget] = useState<string>('stage1');
@@ -213,13 +323,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         console.error("Failed to parse saved shifts", e);
       }
     }
-    const oldShift = localStorage.getItem('atlas_session_shift');
-    const baseShift = oldShift ? parseInt(oldShift) : 3;
-    const initial: { [key: string]: number } = { stage1: baseShift };
-    for (let i = 1; i <= 10; i++) {
-      initial[`cube-${i}`] = baseShift;
-    }
-    return initial;
+    return DEFAULT_CHART_SHIFTS;
   });
 
   const getCubeShift = (cardIndex: number): number => {
@@ -239,7 +343,7 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         console.error("Failed to parse saved letters", e);
       }
     }
-    return { stage1: 'C' };
+    return DEFAULT_CHART_LETTERS;
   });
   const [viewMode, setViewMode] = useState<'live-decoy' | 'cube-faces'>(() => {
     return (localStorage.getItem('atlas_cipher_view_mode') as 'live-decoy' | 'cube-faces') || 'live-decoy';
@@ -266,18 +370,18 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
           }));
         }
       } catch (e) {
-        console.error("Failed to parse saved cubes for dirty tracker", e);
+        // Fallback below
       }
     }
-    return Array.from({ length: 60 }, () => ({ 
-      letter: '', 
-      number: '',
-      episode: '',
-      sponsorAd: '',
-      rotation: '',
-      finalLetter: '',
-      finalNumber: '',
-      riddle: ''
+    return getEnrichedStaticCubes(DEFAULT_CHART_SHIFTS).map(c => ({
+      letter: c.letter || '',
+      number: c.number || '',
+      episode: c.episode || '',
+      sponsorAd: c.sponsorAd || '',
+      rotation: c.rotation || '',
+      finalLetter: c.finalLetter || '',
+      finalNumber: c.finalNumber || '',
+      riddle: c.riddle || ''
     }));
   });
 
@@ -626,38 +730,78 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
     localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(shifts));
   };
 
-  const generateAllCodes = async () => {
-    if (!isLiveMapComplete) return;
-    setIsSaving(true);
+  const getSectionName = (idx: number): string => {
+    if (idx < 10) return "Live Map";
+    if (idx < 20) return "Decoy 1";
+    if (idx < 30) return "Decoy 2";
+    if (idx < 40) return "Decoy 3";
+    if (idx < 50) return "Decoy 4";
+    return "Decoy 5";
+  };
 
-    try {
-      // 1. Get Live Map codes
-      const liveMapCodes = cubes.slice(0, 10).map(c => `${c.letter}${c.number}`);
-      const usedCodes = new Set(liveMapCodes);
-      
-      const newCubes = [...cubes];
-      
-      // 2. Generate for Decoy 1-4 (Indices 10-49)
-      for (let i = 10; i < 50; i++) {
-        let code = '';
-        let letter = '';
-        let number = '';
-        let attempts = 0;
-        do {
-          letter = ALPHABET[Math.floor(Math.random() * 26)];
-          number = (Math.floor(Math.random() * 10) + 1).toString();
-          code = `${letter}${number}`;
-          attempts++;
-          // Break safety
-          if (attempts > 500) break;
-        } while (usedCodes.has(code));
-        
-        usedCodes.add(code);
-        newCubes[i] = { ...newCubes[i], letter, number };
+  const getCubeKeyRef = (idx: number): string => {
+    const cubeNum = (idx % 10) + 1;
+    const cubeKey = `cube-${cubeNum}`;
+    const cardSelectedLetter = selectedLetters[cubeKey] || '?';
+    const currentShift = getCubeShift(idx);
+    return `${cardSelectedLetter}${currentShift}`;
+  };
+
+  const getCubeCipherOutputVal = (idx: number): string => {
+    const c = cubes[idx];
+    if (!c || !c.letter || !c.number) return "";
+    const currentShift = getCubeShift(idx);
+    const shiftedL = getShiftedLetter(c.letter, currentShift);
+    const shiftedN = getShiftedNumber(c.number, currentShift);
+    return `${shiftedL}${shiftedN}`;
+  };
+
+  // Automated check on mount to ensure all 60 cubes are populated deterministically matching the chart layout.
+  useEffect(() => {
+    let hasFault = false;
+    const seenInputs = new Set<string>();
+    const seenCiphers = new Set<string>();
+
+    for (let i = 0; i < cubes.length; i++) {
+      const c = cubes[i];
+      if (!c || !c.letter || !c.number) {
+        hasFault = true;
+        break;
       }
+      const inp = `${c.letter.toUpperCase()}${c.number}`;
+      if (inp === "" || seenInputs.has(inp)) {
+        hasFault = true;
+        break;
+      }
+      seenInputs.add(inp);
+
+      const currentShift = getCubeShift(i);
+      const shiftedL = getShiftedLetter(c.letter, currentShift);
+      const shiftedN = getShiftedNumber(c.number, currentShift);
+      const cipherCode = `${shiftedL}${shiftedN}`;
+      if (cipherCode === "" || seenCiphers.has(cipherCode)) {
+        hasFault = true;
+        break;
+      }
+      seenCiphers.add(cipherCode);
+    }
+
+    // Force fault if the decoy codes in local storage are stale/don't match our new static layout
+    if (cubes[10]?.letter !== STATIC_CUBES_DATA[10].letter) {
+      hasFault = true;
+    }
+
+    if (hasFault) {
+      const enriched = getEnrichedStaticCubes(shifts);
+      setCubes(enriched);
       
-      setCubes(newCubes);
-      setLastSavedSectionCubes(newCubes.map((c) => ({
+      const liveMapCodesList = enriched.slice(0, 10).map(c => `${c.letter}${c.number}`);
+      localStorage.setItem('atlas_live_map_codes', JSON.stringify(liveMapCodesList));
+      localStorage.setItem('atlas_session_cubes', JSON.stringify(enriched));
+      localStorage.setItem('atlas_session_shift', (shifts.stage1 ?? 3).toString());
+      localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(shifts));
+      
+      setLastSavedSectionCubes(enriched.map(c => ({
         letter: c.letter || '',
         number: c.number || '',
         episode: c.episode || '',
@@ -667,67 +811,8 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         finalNumber: c.finalNumber || '',
         riddle: c.riddle || ''
       })));
-
-      // 3. Save to Firebase
-      const { db: firestore, auth: firebaseAuth } = await initFirebase();
-      if (firestore) {
-        const sessionId = `session_${Date.now()}`;
-        
-        // 50 codes (Live Map + Decoy 1-4)
-        const codesToSave = newCubes.slice(0, 50).map((c, i) => ({
-          label: i < 10 ? `Live Map Cube ${i+1}` : `Decoy Cube ${i+1}`,
-          code: `${c.letter}${c.number}`
-        }));
-
-        // 10 Cipher Outputs from Live Map
-        const enrichedCubes = newCubes.map((c, i) => {
-          const currentShift = getCubeShift(i);
-          const shiftedL = getShiftedLetter(c.letter, currentShift);
-          const shiftedN = getShiftedNumber(c.number, currentShift);
-          const label = i < 5 ? `L1T${i + 1}` : i < 10 ? `L2B${i + 1}` : `C${i + 1}`;
-          return {
-            ...c,
-            cipherOutput: `${shiftedL}${shiftedN}`,
-            identificationLabel: label,
-            riddleNumber: (i + 1).toString()
-          };
-        });
-
-        const liveMapCodesList = enrichedCubes.slice(0, 10).map(c => `${c.letter}${c.number}`);
-
-        const cipherOutputs = enrichedCubes.slice(0, 10).map((c, i) => {
-          return {
-            cube: i + 1,
-            output: c.cipherOutput
-          };
-        });
-
-        const path = `sessions/${sessionId}`;
-        try {
-          await setDoc(doc(firestore, "sessions", sessionId), {
-            sessionId,
-            timestamp: new Date().toISOString(),
-            codes: codesToSave,
-            cipherOutputs,
-            shift: shifts.stage1 ?? 3,
-            shifts
-          });
-          
-          // Save to localStorage for the Game Page to access during preview
-          localStorage.setItem('atlas_live_map_codes', JSON.stringify(liveMapCodesList));
-          localStorage.setItem('atlas_session_cubes', JSON.stringify(enrichedCubes));
-          localStorage.setItem('atlas_session_shift', (shifts.stage1 ?? 3).toString());
-          localStorage.setItem('atlas_session_shifts_v2', JSON.stringify(shifts));
-
-          console.log("Session saved successfully to Firestore and localStorage.");
-        } catch (e) {
-          handleFirestoreError(e, OperationType.WRITE, path, firebaseAuth);
-        }
-      }
-    } finally {
-      setIsSaving(false);
     }
-  };
+  }, []);
 
   const renderCubeCard = (idx: number, faceNumber?: number) => {
     const cube = cubes[idx];
@@ -755,6 +840,11 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
             <span className="text-2xl font-black text-[#22c55e] uppercase tracking-[0.1em] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
               Cube {idx + 1}
             </span>
+            {viewMode === 'live-decoy' && (
+              <span className="text-white text-base font-black uppercase tracking-[0.1em] mt-1 select-none">
+                {cardSelectedLetter}{currentShift}
+              </span>
+            )}
             {faceNumber && (
               <span className="text-white/60 text-sm font-black uppercase tracking-[0.1em] mt-1">
                 Face {faceNumber}
@@ -1363,29 +1453,11 @@ export const AtlasCipherPage: React.FC<AtlasCipherPageProps> = ({ onBack, youtub
         </div>
       </div>
 
+
+
       {viewMode === 'live-decoy' ? (
         <>
           {renderCubeSection("Live Map", 0)}
-
-          {/* Generate Codes Button */}
-          <div className="max-w-[1600px] mx-auto w-full flex justify-center mb-12">
-            <button
-              onClick={generateAllCodes}
-              disabled={!isLiveMapComplete || isSaving}
-              className={`px-16 py-6 rounded-2xl font-black text-2xl uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center gap-4 ${
-                isLiveMapComplete 
-                  ? 'bg-white text-black hover:scale-105 active:scale-95 shadow-white/10 cursor-pointer' 
-                  : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
-              } ${isSaving ? 'animate-pulse opacity-50' : ''}`}
-            >
-              {isSaving ? 'Saving Data...' : (
-                <>
-                  <Zap className={`w-6 h-6 ${isLiveMapComplete ? 'text-black' : 'text-white/20'}`} />
-                  Generate Codes
-                </>
-              )}
-            </button>
-          </div>
 
           {renderCubeSection("Decoy 1", 10)}
           {renderCubeSection("Decoy 2", 20)}
